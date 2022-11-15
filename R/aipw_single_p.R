@@ -1,15 +1,15 @@
 
 
 
-#' Estimate ATE using p splits cross-fit procedure for AIPW estimator
+#' Estimate ATE using cross-fit procedure for AIPW estimator
 #'
 #' @param data a data frame of tibble
 #' @param exposure name of exposure variable
 #' @param outcome name of outcome variable
 #' @param covarsT a vector of names of covaraites for treatment model
 #' @param covarsO a vector of names of covaraites for outcome model
-#' @param learners similar as [https://rdrr.io/cran/SuperLearner/man/SuperLearner.html#heading-2](SL.library() in Superlearner::Superlearner())
-#' @param control similar as [https://rdrr.io/cran/SuperLearner/man/SuperLearner.html#heading-2](cvControl() in Superlearner::Superlearner())
+#' @param learners similar as \code{\link[Superlearner:SL.library()]{Superlearner::SL.library()}}
+#' @param control similar as  \code{\link[Superlearner:cvControl()]{Superlearner::cvControl()}}
 #' @param n_split number of splits
 #'
 #' @return a tibble of estimates
@@ -17,6 +17,7 @@
 #' @export
 #'
 #' @examples
+#'
 #' sum(1:5)
 #'
 aipw_single_p <- function(data, exposure, outcome, covarsT, covarsO, learners, control, n_split){

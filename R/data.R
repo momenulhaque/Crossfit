@@ -1,15 +1,19 @@
-#' A simulated data set
+#' A simulated data set having 2000 rows and 7 columns.
 #'
 #'
 #'
 #' @format ## `data`
-#' A data frame with 100 simulated data set where each has 2000 rowa and 8 columns:
+#' A data frame with 2000 rows and 7 columns:
 #' \describe{
-#'   \item{sim_id}{simulation id}
-#'   \item{Y}{outcome variable}
-#'   \item{statin}{exposure variable}
-#'   \item{age}{age variable}
+#'   \item{Y}{Atherosclerotic cardiovascular disease (ASCVD) status}
+#'   \item{statin}{exposure of statin usage}
+#'   \item{age}{patient's age}
+#'   \item{ldl_log}{log of low-density lipoprotein measurement}
+#'   \item{diabetes}{Diabetes status}
+#'   \item{risk_score}{Risk score of ASCVD for each patient}
+#'   \item{risk_score_cat}{Risk category of ASCVD for each patient. The patient belongs to 3 category has the greatest risk}
+#'
 #'    ...
 #' }
 #' @source
-#' Simulation true ATE = 0.1437.
+#'

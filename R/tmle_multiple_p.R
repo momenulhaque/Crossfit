@@ -1,4 +1,5 @@
-#' apply aipw_single_p for num_cf times
+
+#' apply tmle_single_p for num_cf times
 #'
 #' @param data similar as aipw_single_p() function
 #' @param exposure similar as aipw_single_p() function
@@ -14,17 +15,17 @@
 #' @export
 #'
 #' @examples
-#' sum(1:4)
+#' sum(1:5)
 #'
 #'
-aipw_Multiple_p <-function(data, exposure, outcome, covarsT, covarsO, learners, control, num_cf, n_split){
+tmle_multiple_p <-function(data, exposure, outcome, covarsT, covarsO, learners, control, num_cf, n_split){
 
   #Initialize results
   runs <- tibble(r1=double(), r0=double(), rd=double(), v1=double(), v0=double(), vd=double())
 
   #Run on num_cf splits
   for(cf in 1:num_cf){
-    runs <- bind_rows(runs, aipw_single_p(data, exposure, outcome, covarsT, covarsO, learners, control, n_split))
+    runs <- bind_rows(runs, DC_TMLE_Single_p(data, exposure, outcome, covarsT, covarsO, learners, control, n_split))
 
   }
   #Medians of splits
@@ -41,9 +42,4 @@ aipw_Multiple_p <-function(data, exposure, outcome, covarsT, covarsO, learners, 
   return(results)
 
 }
-
-
-
-
-
 

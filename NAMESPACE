@@ -2,3 +2,5 @@
 
 export(aipw_Multiple_p)
 export(aipw_single_p)
+export(tmle_multiple_p)
+export(tmle_single_p)

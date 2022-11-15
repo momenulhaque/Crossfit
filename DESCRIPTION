@@ -1,17 +1,18 @@
-Package: Crossfit.ate
-Title: Estimate ATE using p splits cross-fit procedure for AIPW estimator
+Package: Crossfit
+Title: Estimate ATE using cross-fit procedure for AIPW or TMLE estimator
 Version: 0.0.0.9000
 Authors@R: 
     person("Momenul Haque", "Mondol", , "mmondol@isrt.ac.bd", role = c("aut", "cre"),
            comment = c(ORCID = "YOUR-ORCID-ID"))
-Description: Estimate ATE using p splits cross-fit procedure for AIPW estimator
+Description: Estimate ATE using cross-fit procedure for AIPW or TMLE estimator
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.2.1
 Imports: 
     dplyr,
-    SuperLearner
+    SuperLearner,
+    tidyr
 Depends: 
     R (>= 2.10)
 LazyData: true
