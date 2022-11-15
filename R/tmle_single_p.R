@@ -15,7 +15,7 @@
 #' @export
 #'
 #' @examples
-#' sum(1:5)
+#' sum(1:10)
 #'
 #'
 
