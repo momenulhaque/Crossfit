@@ -26,7 +26,7 @@ tmle_multiple_p <- function(data, exposure, outcome, covarsT, covarsO, learners,
 
   #Run on num_cf splits
   for(cf in 1:num_cf){
-    runs <- bind_rows(runs, DC_TMLE_Single_p(data, exposure, outcome, covarsT, covarsO, learners, control, n_split))
+    runs <- bind_rows(runs, tmle_single_p(data, exposure, outcome, covarsT, covarsO, learners, control, n_split, rand_split, seed))
 
   }
   #Medians of splits
