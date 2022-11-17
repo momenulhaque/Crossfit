@@ -25,8 +25,11 @@ aipw_multiple_p <-function(data, exposure, outcome, covarsT, covarsO, learners, 
   runs <- tibble(r1=double(), r0=double(), rd=double(), v1=double(), v0=double(), vd=double())
 
   #Run on num_cf splits
+  set.seed(seed)
+  cf_seed = sample(num_cf)
   for(cf in 1:num_cf){
-    runs <- bind_rows(runs, aipw_single_p(data, exposure, outcome, covarsT, covarsO, learners, control, n_split))
+    seed = cf_seed[cf]
+    runs <- bind_rows(runs, aipw_single_p(data, exposure, outcome, covarsT, covarsO, learners, control, n_split, rand_split, seed))
 
   }
   #Medians of splits
