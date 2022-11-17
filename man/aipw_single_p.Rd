@@ -12,7 +12,9 @@ aipw_single_p(
   covarsO,
   learners,
   control,
-  n_split
+  n_split,
+  rand_split = TRUE,
+  seed = 145
 )
 }
 \arguments{
@@ -31,6 +33,10 @@ aipw_single_p(
 \item{control}{similar as  \code{\link[Superlearner:cvControl()]{Superlearner::cvControl()}}}
 
 \item{n_split}{number of splits}
+
+\item{rand_split}{logical value; if be TRUE, discordant splits for exposure and outcome model are chosen at random ; otherwise chosen systematically.}
+
+\item{seed}{numeric value to reproduce the splits}
 }
 \value{
 a tibble of estimates

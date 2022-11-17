@@ -10,7 +10,8 @@
 #' @param control similar as aipw_single_p() function
 #' @param num_cf number of partitions
 #' @param n_split similar as aipw_single_p() function
-#'
+#' @param rand_split logical value; if be TRUE, discordant splits for exposure and outcome model are chosen at random ; otherwise chosen systematically.
+#' @param seed numeric value to reproduce the splits
 #' @return a tibble of the estimates
 #' @export
 #'
@@ -18,7 +19,7 @@
 #' sum(1:5)
 #'
 #'
-tmle_multiple_p <-function(data, exposure, outcome, covarsT, covarsO, learners, control, num_cf, n_split){
+tmle_multiple_p <- function(data, exposure, outcome, covarsT, covarsO, learners, control, num_cf, n_split, rand_split = TRUE, seed = 145){
 
   #Initialize results
   runs <- tibble(r1=double(), r0=double(), rd=double(), v1=double(), v0=double(), vd=double())

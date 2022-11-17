@@ -9,21 +9,20 @@
 #' @param learners similar as \code{\link[Superlearner:SL.library()]{Superlearner::SL.library()}}
 #' @param control similar as  \code{\link[Superlearner:cvControl()]{Superlearner::cvControl()}}
 #' @param n_split number of splits
-#'
+#' @param rand_split logical value; if be TRUE, discordant splits for exposure and outcome model are chosen at random ; otherwise chosen systematically.
+#' @param seed numeric value to reproduce the splits
 #' @return a tibble of estimates
 #'
 #' @export
 #'
 #' @examples
-#' sum(1:10)
+#' sum(1:5)
 #'
 #'
-
-
-tmle_single_p = function(data, exposure, outcome, covarsT, covarsO, learners, control, n_split){
+tmle_single_p = function(data, exposure, outcome, covarsT, covarsO, learners, control, n_split, rand_split = TRUE, seed = 145){
 
     # Split sample
-
+    set.seed(seed)
     splits_p <- sample(rep(1:n_split, diff(floor(nrow(data) * c(0:n_split/n_split)))))
 
     data_pp = data_p = data %>% mutate(s=splits_p)
@@ -114,20 +113,43 @@ tmle_single_p = function(data, exposure, outcome, covarsT, covarsO, learners, co
       select(s, paste0(rep(c("H0_", "H1_"), times = n_split), rep(1:n_split, each = 2)))
 
     epsilon = mu0_1 = mu1_1 = iid = list()
-    for(i in 1:n_split){
-      iid[[i]] = sample(setdiff(1:n_split, i) , 2, replace = FALSE)
+    if(rand_split == TRUE){
+        for(i in 1:n_split){
+          iid[[i]] = sample(setdiff(1:n_split, i) , 2, replace = FALSE)
 
-      h0 = pull(H_p %>% filter(s==i), paste0("H0_", iid[[i]][1]))
-      h1 = pull(H_p %>% filter(s==i), paste0("H1_", iid[[i]][1]))
-      muu = pull(mu_p %>% filter(s==i), paste0("mu_", iid[[i]][2]))
+          h0 = pull(H_p %>% filter(s==i), paste0("H0_", iid[[i]][1]))
+          h1 = pull(H_p %>% filter(s==i), paste0("H1_", iid[[i]][1]))
+          muu = pull(mu_p %>% filter(s==i), paste0("mu_", iid[[i]][2]))
 
-      epsilon[[i]] <- coef(glm(Y ~ -1 + h0 + h1 + offset(qlogis(muu)),
-                               data = data_p %>% filter(s==i), family = binomial))
+          epsilon[[i]] <- coef(glm(Y ~ -1 + h0 + h1 + offset(qlogis(muu)),
+                                   data = data_p %>% filter(s==i), family = binomial))
 
-      mu0_1[[i]] = plogis(qlogis(pull(mu0_p, paste0("mu0_", iid[[i]][2]))) + epsilon[[i]][1] / (1 - pull(pi_p, paste0("pi", iid[[i]][1]))))
-      mu1_1[[i]] = plogis(qlogis(pull(mu1_p, paste0("mu1_", iid[[i]][2]))) + epsilon[[i]][2] / pull(pi_p, paste0("pi", iid[[i]][1])))
+          mu0_1[[i]] = plogis(qlogis(pull(mu0_p, paste0("mu0_", iid[[i]][2]))) + epsilon[[i]][1] / (1 - pull(pi_p, paste0("pi", iid[[i]][1]))))
+          mu1_1[[i]] = plogis(qlogis(pull(mu1_p, paste0("mu1_", iid[[i]][2]))) + epsilon[[i]][2] / pull(pi_p, paste0("pi", iid[[i]][1])))
 
+        }
     }
+
+    if(rand_split == FALSE){
+      pi_id = c(2:n_split, 1); mu_id = c(3:n_split, 1, 2)
+      for(i in 1:n_split){
+
+        h0 = pull(H_p %>% filter(s==i), paste0("H0_", pi_id[i]))
+        h1 = pull(H_p %>% filter(s==i), paste0("H1_", pi_id[i]))
+        muu = pull(mu_p %>% filter(s==i), paste0("mu_", mu_id[i]))
+
+        epsilon[[i]] <- coef(glm(Y ~ -1 + h0 + h1 + offset(qlogis(muu)),
+                                 data = data_p %>% filter(s==i), family = binomial))
+
+        mu0_1[[i]] = plogis(qlogis(pull(mu0_p, paste0("mu0_", mu_id[i]))) + epsilon[[i]][1] / (1 - pull(pi_p, paste0("pi", pi_id[i]))))
+        mu1_1[[i]] = plogis(qlogis(pull(mu1_p, paste0("mu1_", mu_id[i]))) + epsilon[[i]][2] / pull(pi_p, paste0("pi", pi_id[i])))
+
+      }
+    }
+
+
+
+
 
     mu0_1_p = suppressMessages(bind_cols(mu0_1))
     mu1_1_p = suppressMessages(bind_cols(mu1_1))
@@ -150,17 +172,36 @@ tmle_single_p = function(data, exposure, outcome, covarsT, covarsO, learners, co
 
       rd[i] = r1[[i]] - r0[[i]]
 
-      nm = pull(data_p, exposure)/pull(data_p, paste0("pi", iid[[i]][1]))
-      dm = pull(data_p, Y) - pull(data_p, paste0("mu1_1_", iid[[i]][2]))
-      ad = pull(data_p, paste0("mu1_1_", iid[[i]][2])) - r1[[i]]
+      if(rand_split == TRUE){
+        nm = pull(data_p, exposure)/pull(data_p, paste0("pi", iid[[i]][1]))
+        dm = pull(data_p, Y) - pull(data_p, paste0("mu1_1_", iid[[i]][2]))
+        ad = pull(data_p, paste0("mu1_1_", iid[[i]][2])) - r1[[i]]
+      }
+
+
+      if(rand_split == FALSE){
+        nm = pull(data_p, exposure)/pull(data_p, paste0("pi", pi_id[i]))
+        dm = pull(data_p, Y) - pull(data_p, paste0("mu1_1_", mu_id[i]))
+        ad = pull(data_p, paste0("mu1_1_", mu_id[i])) - r1[[i]]
+      }
+
+
 
       if1[[i]] = nm*dm + ad
       v1[i] = var(if1[[i]])/n_s[i]
 
+      if(rand_split == TRUE){
+        nm = (1 - pull(data_p, exposure))/(1 - pull(data_p, paste0("pi", iid[[i]][1])))
+        dm = dplyr::pull(data_p, Y) - pull(data_p, paste0("mu0_1_", iid[[i]][2]))
+        ad = dplyr::pull(data_p, paste0("mu0_1_", iid[[i]][2])) - r0[[i]]
+      }
 
-      nm = (1 - pull(data_p, exposure))/(1 - pull(data_p, paste0("pi", iid[[i]][1])))
-      dm = dplyr::pull(data_p, Y) - pull(data_p, paste0("mu0_1_", iid[[i]][2]))
-      ad = dplyr::pull(data_p, paste0("mu0_1_", iid[[i]][2])) - r0[[i]]
+      if(rand_split == FALSE){
+        nm = (1 - pull(data_p, exposure))/(1 - pull(data_p, paste0("pi", pi_id[i])))
+        dm = dplyr::pull(data_p, Y) - pull(data_p, paste0("mu0_1_", mu_id[i]))
+        ad = dplyr::pull(data_p, paste0("mu0_1_", mu_id[i])) - r0[[i]]
+      }
+
 
       if0[[i]] = nm*dm + ad
       v0[i] = var(if0[[i]])/n_s[i]

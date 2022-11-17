@@ -1,6 +1,3 @@
-
-
-
 #' Estimate ATE using cross-fit procedure for AIPW estimator
 #'
 #' @param data a data frame of tibble
@@ -11,7 +8,8 @@
 #' @param learners similar as \code{\link[Superlearner:SL.library()]{Superlearner::SL.library()}}
 #' @param control similar as  \code{\link[Superlearner:cvControl()]{Superlearner::cvControl()}}
 #' @param n_split number of splits
-#'
+#' @param rand_split logical value; if be TRUE, discordant splits for exposure and outcome model are chosen at random ; otherwise chosen systematically.
+#' @param seed numeric value to reproduce the splits
 #' @return a tibble of estimates
 #'
 #' @export
@@ -20,10 +18,10 @@
 #'
 #' sum(1:5)
 #'
-aipw_single_p <- function(data, exposure, outcome, covarsT, covarsO, learners, control, n_split){
+aipw_single_p <- function(data, exposure, outcome, covarsT, covarsO, learners, control, n_split, rand_split = TRUE, seed = 145){
 
   # Split sample
-
+  set.seed(seed)
   splits_p <- sample(rep(1:n_split, diff(floor(nrow(data) * c(0:n_split/n_split)))))
 
   data_p <- data %>% mutate(s=splits_p)
@@ -37,7 +35,7 @@ aipw_single_p <- function(data, exposure, outcome, covarsT, covarsO, learners, c
   # P-score model
 
   pi_fitter <- function(df){
-    SuperLearner::SuperLearner(Y=as.matrix(df[, exposure]), X=df[, covarsT], family=binomial(), SL.library=learners, cvControl=control)
+    SuperLearner(Y=as.matrix(df[, exposure]), X=df[, covarsT], family=binomial(), SL.library=learners, cvControl=control)
   }
 
   dat_nested_p <- dat_nested_p %>%
@@ -102,16 +100,33 @@ aipw_single_p <- function(data, exposure, outcome, covarsT, covarsO, learners, c
   X_p <-  data_p %>%
     select(s, exposure)
 
-
   a1 <- a0 <- list()
-  for(i in 1:n_split){
-    iid = sample(setdiff(1:n_split, i) , 2, replace = FALSE)
-    a1[[i]] = unlist(X_p[X_p$s==i, -1] * W_p[W_p$s == i, paste0("ipw_pi", iid[1])] * (Y_p[Y_p$s==i, -1] - mu1_p[mu1_p$s == i, paste0("mu1_", iid[2])]) +
-                       mu1_p[mu1_p$s == i, paste0("mu1_", iid[2])])
-    a0[[i]] = unlist((1-X_p[X_p$s==i, -1]) * W_p[W_p$s == i, paste0("ipw_pi", iid[1])] * (Y_p[Y_p$s==i, -1] - mu0_p[mu0_p$s == i, paste0("mu0_", iid[2])]) +
-                       mu0_p[mu0_p$s == i, paste0("mu0_", iid[2])])
+  if(rand_split == TRUE){
+
+    for(i in 1:n_split){
+      iid = sample(setdiff(1:n_split, i) , 2, replace = FALSE)
+      a1[[i]] = unlist(X_p[X_p$s==i, -1] * W_p[W_p$s == i, paste0("ipw_pi", iid[1])] * (Y_p[Y_p$s==i, -1] - mu1_p[mu1_p$s == i, paste0("mu1_", iid[2])]) +
+                         mu1_p[mu1_p$s == i, paste0("mu1_", iid[2])])
+      a0[[i]] = unlist((1-X_p[X_p$s==i, -1]) * W_p[W_p$s == i, paste0("ipw_pi", iid[1])] * (Y_p[Y_p$s==i, -1] - mu0_p[mu0_p$s == i, paste0("mu0_", iid[2])]) +
+                         mu0_p[mu0_p$s == i, paste0("mu0_", iid[2])])
+
+    }
 
   }
+
+  if(rand_split == FALSE){
+    pi_id = c(2:n_split, 1); mu_id = c(3:n_split, 1, 2)
+    for(i in 1:n_split){
+      a1[[i]] = unlist(X_p[X_p$s==i, -1] * W_p[W_p$s == i, paste0("ipw_pi", pi_id[i])] * (Y_p[Y_p$s==i, -1] - mu1_p[mu1_p$s == i, paste0("mu1_", mu_id[i])]) +
+                         mu1_p[mu1_p$s == i, paste0("mu1_", mu_id[i])])
+      a0[[i]] = unlist((1-X_p[X_p$s==i, -1]) * W_p[W_p$s == i, paste0("ipw_pi", pi_id[i])] * (Y_p[Y_p$s==i, -1] - mu0_p[mu0_p$s == i, paste0("mu0_", mu_id[i])]) +
+                         mu0_p[mu0_p$s == i, paste0("mu0_", mu_id[i])])
+
+    }
+
+  }
+
+
 
 
   r1 = sapply(a1, function(x) mean(x, na.rm = TRUE))
@@ -141,4 +156,5 @@ aipw_single_p <- function(data, exposure, outcome, covarsT, covarsO, learners, c
   results <- tibble(r1=r1_f, r0=r0_f, rd=rd_f, v1=v1, v0=v0, vd=vd)
   return(results)
 }
+
 
