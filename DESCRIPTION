@@ -1,6 +1,6 @@
 Package: Crossfit
 Title: Estimate ATE using cross-fit procedure for AIPW or TMLE estimator
-Version: 0.0.0.9000
+Version: 0.1.0
 Authors@R: 
     person("Momenul Haque", "Mondol", , "mmondol@isrt.ac.bd", role = c("aut", "cre"),
            comment = c(ORCID = "YOUR-ORCID-ID"))
