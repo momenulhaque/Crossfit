@@ -1,6 +1,6 @@
 # Crossfit: An R package to fit and compare DC-AIPW and DC-TMLE for multiple splits
 
-## How to install-
+## How to install and apply DC-AIPW and DC-TMLE on a data set
 
 ```{r}
 credentials::set_github_pat() # it asks for token. 
