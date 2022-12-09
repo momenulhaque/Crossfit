@@ -104,7 +104,7 @@ tmle_single_p = function(data, exposure, outcome, covarsT, covarsO, learners, co
       select(s, paste0("mu0_", 1:n_split))
 
     Y_p <-  data_p %>%
-      select(s, Y)
+      select(s, outcome)
 
     X_p <-  data_p %>%
       select(s, exposure)
@@ -121,7 +121,7 @@ tmle_single_p = function(data, exposure, outcome, covarsT, covarsO, learners, co
           h1 = pull(H_p %>% filter(s==i), paste0("H1_", iid[[i]][1]))
           muu = pull(mu_p %>% filter(s==i), paste0("mu_", iid[[i]][2]))
 
-          epsilon[[i]] <- coef(glm(Y ~ -1 + h0 + h1 + offset(qlogis(muu)),
+          epsilon[[i]] <- coef(glm(outcome ~ -1 + h0 + h1 + offset(qlogis(muu)),
                                    data = data_p %>% filter(s==i), family = binomial))
 
           mu0_1[[i]] = plogis(qlogis(pull(mu0_p, paste0("mu0_", iid[[i]][2]))) + epsilon[[i]][1] / (1 - pull(pi_p, paste0("pi", iid[[i]][1]))))
@@ -138,7 +138,7 @@ tmle_single_p = function(data, exposure, outcome, covarsT, covarsO, learners, co
         h1 = pull(H_p %>% filter(s==i), paste0("H1_", pi_id[i]))
         muu = pull(mu_p %>% filter(s==i), paste0("mu_", mu_id[i]))
 
-        epsilon[[i]] <- coef(glm(Y ~ -1 + h0 + h1 + offset(qlogis(muu)),
+        epsilon[[i]] <- coef(glm(outcome ~ -1 + h0 + h1 + offset(qlogis(muu)),
                                  data = data_p %>% filter(s==i), family = binomial))
 
         mu0_1[[i]] = plogis(qlogis(pull(mu0_p, paste0("mu0_", mu_id[i]))) + epsilon[[i]][1] / (1 - pull(pi_p, paste0("pi", pi_id[i]))))
@@ -174,14 +174,14 @@ tmle_single_p = function(data, exposure, outcome, covarsT, covarsO, learners, co
 
       if(rand_split == TRUE){
         nm = pull(data_p, exposure)/pull(data_p, paste0("pi", iid[[i]][1]))
-        dm = pull(data_p, Y) - pull(data_p, paste0("mu1_1_", iid[[i]][2]))
+        dm = pull(data_p, outcome) - pull(data_p, paste0("mu1_1_", iid[[i]][2]))
         ad = pull(data_p, paste0("mu1_1_", iid[[i]][2])) - r1[[i]]
       }
 
 
       if(rand_split == FALSE){
         nm = pull(data_p, exposure)/pull(data_p, paste0("pi", pi_id[i]))
-        dm = pull(data_p, Y) - pull(data_p, paste0("mu1_1_", mu_id[i]))
+        dm = pull(data_p, outcome) - pull(data_p, paste0("mu1_1_", mu_id[i]))
         ad = pull(data_p, paste0("mu1_1_", mu_id[i])) - r1[[i]]
       }
 
@@ -192,13 +192,13 @@ tmle_single_p = function(data, exposure, outcome, covarsT, covarsO, learners, co
 
       if(rand_split == TRUE){
         nm = (1 - pull(data_p, exposure))/(1 - pull(data_p, paste0("pi", iid[[i]][1])))
-        dm = dplyr::pull(data_p, Y) - pull(data_p, paste0("mu0_1_", iid[[i]][2]))
+        dm = dplyr::pull(data_p, outcome) - pull(data_p, paste0("mu0_1_", iid[[i]][2]))
         ad = dplyr::pull(data_p, paste0("mu0_1_", iid[[i]][2])) - r0[[i]]
       }
 
       if(rand_split == FALSE){
         nm = (1 - pull(data_p, exposure))/(1 - pull(data_p, paste0("pi", pi_id[i])))
-        dm = dplyr::pull(data_p, Y) - pull(data_p, paste0("mu0_1_", mu_id[i]))
+        dm = dplyr::pull(data_p, outcome) - pull(data_p, paste0("mu0_1_", mu_id[i]))
         ad = dplyr::pull(data_p, paste0("mu0_1_", mu_id[i])) - r0[[i]]
       }
 
