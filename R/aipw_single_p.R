@@ -95,7 +95,7 @@ aipw_single_p <- function(data, exposure, outcome, covarsT, covarsO, learners, c
     select(s, paste0("mu0_", 1:n_split))
 
   Y_p <-  data_p %>%
-    select(s, Y)
+    select(s, outcome)
 
   X_p <-  data_p %>%
     select(s, exposure)
