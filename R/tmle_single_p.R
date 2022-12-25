@@ -121,8 +121,10 @@ tmle_single_p = function(data, exposure, outcome, covarsT, covarsO, learners, co
           h1 = pull(H_p %>% filter(s==i), paste0("H1_", iid[[i]][1]))
           muu = pull(mu_p %>% filter(s==i), paste0("mu_", iid[[i]][2]))
 
-          epsilon[[i]] <- coef(glm(outcome ~ -1 + h0 + h1 + offset(qlogis(muu)),
-                                   data = data_p %>% filter(s==i), family = binomial))
+          y = pull(data_p %>% filter(s==i), outcome) 
+      
+          epsilon[[i]] <- coef(glm(y ~ -1 + h0 + h1 + offset(qlogis(muu)),
+                               data = data_p %>% filter(s==i), family = binomial))
 
           mu0_1[[i]] = plogis(qlogis(pull(mu0_p, paste0("mu0_", iid[[i]][2]))) + epsilon[[i]][1] / (1 - pull(pi_p, paste0("pi", iid[[i]][1]))))
           mu1_1[[i]] = plogis(qlogis(pull(mu1_p, paste0("mu1_", iid[[i]][2]))) + epsilon[[i]][2] / pull(pi_p, paste0("pi", iid[[i]][1])))
@@ -138,8 +140,11 @@ tmle_single_p = function(data, exposure, outcome, covarsT, covarsO, learners, co
         h1 = pull(H_p %>% filter(s==i), paste0("H1_", pi_id[i]))
         muu = pull(mu_p %>% filter(s==i), paste0("mu_", mu_id[i]))
 
-        epsilon[[i]] <- coef(glm(outcome ~ -1 + h0 + h1 + offset(qlogis(muu)),
-                                 data = data_p %>% filter(s==i), family = binomial))
+        y = pull(data_p %>% filter(s==i), outcome) 
+      
+        epsilon[[i]] <- coef(glm(y ~ -1 + h0 + h1 + offset(qlogis(muu)),
+                               data = data_p %>% filter(s==i), family = binomial))
+
 
         mu0_1[[i]] = plogis(qlogis(pull(mu0_p, paste0("mu0_", mu_id[i]))) + epsilon[[i]][1] / (1 - pull(pi_p, paste0("pi", pi_id[i]))))
         mu1_1[[i]] = plogis(qlogis(pull(mu1_p, paste0("mu1_", mu_id[i]))) + epsilon[[i]][2] / pull(pi_p, paste0("pi", pi_id[i])))
