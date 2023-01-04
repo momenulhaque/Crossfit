@@ -1,4 +1,7 @@
 # Crossfit: An R package to apply sample splitting (cross-fit) to AIPW and TMLE in causal inference
+---
+Author: Momenul Haque Mondol & Mohammad Ehsanul Karim
+---
 
 ## How to install
 
