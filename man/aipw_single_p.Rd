@@ -2,7 +2,7 @@
 % Please edit documentation in R/aipw_single_p.R
 \name{aipw_single_p}
 \alias{aipw_single_p}
-\title{Estimate ATE using cross-fit procedure for AIPW estimator}
+\title{Estimate ATE using AIPW estimator with cross-fit algorithm (single repetition)}
 \usage{
 aipw_single_p(
   data,
@@ -10,11 +10,12 @@ aipw_single_p(
   outcome,
   covarsT,
   covarsO,
+  family.y,
   learners,
   control,
   n_split,
-  rand_split = TRUE,
-  seed = 145
+  rand_split,
+  seed
 )
 }
 \arguments{
@@ -28,23 +29,28 @@ aipw_single_p(
 
 \item{covarsO}{a vector of names of covaraites for outcome model}
 
+\item{family.y}{it is the family for outcome model. It can \code{binomial() (default)} or \code{"gaussian"}}
+
 \item{learners}{similar as \code{\link[Superlearner:SL.library()]{Superlearner::SL.library()}}}
 
 \item{control}{similar as  \code{\link[Superlearner:cvControl()]{Superlearner::cvControl()}}}
 
-\item{n_split}{number of splits}
+\item{n_split}{number of splits used, default \code{n_split = 3}}
 
-\item{rand_split}{logical value; if be TRUE, discordant splits for exposure and outcome model are chosen at random ; otherwise chosen systematically.}
+\item{rand_split}{logical value; if be FALSE \code{(default)}, discordant splits for exposure and outcome model are chosen systematically; otherwise chosen randomly.}
 
-\item{seed}{numeric value to reproduce the splits}
+\item{seed}{numeric value to reproduce the splits distribution}
 }
 \value{
-a tibble of estimates
+a tibble of estimates.
 }
 \description{
-Estimate ATE using cross-fit procedure for AIPW estimator
+Estimate ATE using AIPW estimator with cross-fit algorithm (single repetition)
 }
 \examples{
+
+# See the README file for details
+
 
 sum(1:5)
 

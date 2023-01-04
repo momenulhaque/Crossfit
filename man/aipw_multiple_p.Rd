@@ -2,7 +2,7 @@
 % Please edit documentation in R/aipw_multiple_p.R
 \name{aipw_multiple_p}
 \alias{aipw_multiple_p}
-\title{apply aipw_single_p for num_cf times}
+\title{Estimate ATE using from AIPW estimator using cross-fit algorithm (multiple repetition)}
 \usage{
 aipw_multiple_p(
   data,
@@ -10,44 +10,52 @@ aipw_multiple_p(
   outcome,
   covarsT,
   covarsO,
-  learners,
+  family.y = binomial(),
+  learners = c("SL.glm", "SL.glmnet", "SL.xgboost"),
   control,
-  num_cf,
-  n_split,
-  rand_split = TRUE,
+  num_cf = 5,
+  n_split = 3,
+  rand_split = FALSE,
   seed = 145
 )
 }
 \arguments{
-\item{data}{similar as aipw_single_p() function}
+\item{data}{a data frame of tibble}
 
-\item{exposure}{similar as aipw_single_p() function}
+\item{exposure}{name of exposure variable}
 
-\item{outcome}{similar as aipw_single_p() function}
+\item{outcome}{name of outcome variable}
 
-\item{covarsT}{similar as aipw_single_p() function}
+\item{covarsT}{a vector of names of covaraites for treatment model}
 
-\item{covarsO}{similar as aipw_single_p() function}
+\item{covarsO}{a vector of names of covaraites for outcome model}
 
-\item{learners}{similar as aipw_single_p() function}
+\item{family.y}{it is the family for outcome model. It can \code{binomial() (default)} or \code{"gaussian"}}
 
-\item{control}{similar as aipw_single_p() function}
+\item{learners}{similar as \code{\link[Superlearner:SL.library()]{Superlearner::SL.library()}}}
 
-\item{num_cf}{number of partitions}
+\item{control}{similar as  \code{\link[Superlearner:cvControl()]{Superlearner::cvControl()}}}
 
-\item{n_split}{similar as aipw_single_p() function}
+\item{num_cf}{number of repetition done. The default is 5.}
 
-\item{rand_split}{logical value; if be TRUE, discordant splits for exposure and outcome model are chosen at random ; otherwise chosen systematically.}
+\item{n_split}{number of splits used, default \code{n_split = 3}}
 
-\item{seed}{numeric value to reproduce the splits}
+\item{rand_split}{logical value; if be FALSE \code{(default)}, discordant splits for exposure and outcome model are chosen systematically; otherwise chosen randomly.}
+
+\item{seed}{numeric value to reproduce the splits distribution}
 }
 \value{
 a tibble of the estimates
+
+a tibble of the estimates
 }
 \description{
-apply aipw_single_p for num_cf times
+Estimate ATE using from AIPW estimator using cross-fit algorithm (multiple repetition)
 }
 \examples{
+
+# See the README file for details
+
 sum(1:4)
 
 

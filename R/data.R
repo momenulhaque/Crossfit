@@ -13,7 +13,7 @@
 #'   \item{risk_score}{Risk score of ASCVD for each patient}
 #'   \item{risk_score_cat}{Risk category of ASCVD for each patient. The patient belongs to 3 category has the greatest risk}
 #'
-#'    ...
 #' }
-#' @source
 #'
+"data"
+

@@ -1,24 +1,42 @@
-#' Estimate ATE using cross-fit procedure for AIPW estimator
+#' Estimate ATE using AIPW estimator with cross-fit algorithm (single repetition)
 #'
 #' @param data a data frame of tibble
 #' @param exposure name of exposure variable
 #' @param outcome name of outcome variable
 #' @param covarsT a vector of names of covaraites for treatment model
 #' @param covarsO a vector of names of covaraites for outcome model
+#' @param family.y it is the family for outcome model. It can `binomial() (default)` or `"gaussian"`
 #' @param learners similar as \code{\link[Superlearner:SL.library()]{Superlearner::SL.library()}}
 #' @param control similar as  \code{\link[Superlearner:cvControl()]{Superlearner::cvControl()}}
-#' @param n_split number of splits
-#' @param rand_split logical value; if be TRUE, discordant splits for exposure and outcome model are chosen at random ; otherwise chosen systematically.
-#' @param seed numeric value to reproduce the splits
-#' @return a tibble of estimates
+#' @param n_split number of splits used, default `n_split = 3`
+#' @param rand_split logical value; if be FALSE `(default)`, discordant splits for exposure and outcome model are chosen systematically; otherwise chosen randomly.
+#' @param seed numeric value to reproduce the splits distribution
+#' @return a tibble of estimates.
+#'
+#' @import dplyr tibble tidyr purrr furrr tmle
+#'
+#' @importFrom stats binomial coef glm median plogis predict qlogis var
 #'
 #' @export
 #'
 #' @examples
 #'
+#' # See the README file for details
+#'
+#'
 #' sum(1:5)
 #'
-aipw_single_p <- function(data, exposure, outcome, covarsT, covarsO, learners, control, n_split, rand_split = TRUE, seed = 145){
+aipw_single_p <- function(data,
+                          exposure,
+                          outcome,
+                          covarsT,
+                          covarsO,
+                          family.y,
+                          learners,
+                          control,
+                          n_split,
+                          rand_split,
+                          seed){
 
   # Split sample
   set.seed(seed)
@@ -35,7 +53,11 @@ aipw_single_p <- function(data, exposure, outcome, covarsT, covarsO, learners, c
   # P-score model
 
   pi_fitter <- function(df){
-    SuperLearner(Y=as.matrix(df[, exposure]), X=df[, covarsT], family=binomial(), SL.library=learners, cvControl=control)
+    SuperLearner(Y=as.matrix(df[, exposure]),
+                 X=df[, covarsT],
+                 family=binomial(),
+                 SL.library=learners,
+                 cvControl=control)
   }
 
   dat_nested_p <- dat_nested_p %>%
@@ -55,14 +77,15 @@ aipw_single_p <- function(data, exposure, outcome, covarsT, covarsO, learners, c
 
   #Outcome model
   mu_fitter <- function(df){
-    SuperLearner::SuperLearner(Y=as.matrix(df[, outcome]), X=df[, c(exposure, covarsO)], family=binomial(), SL.library=learners, cvControl=control)
+    SuperLearner::SuperLearner(Y=as.matrix(df[, outcome]),
+                               X=df[, c(exposure, covarsO)],
+                               family=family.y,
+                               SL.library=learners,
+                               cvControl=control)
   }
 
   dat_nested_p <- dat_nested_p %>%
     mutate(mu_fit=map(data, mu_fitter))
-
-
-
 
   # Calc mu using each split
   dat1_p = dat0_p = data_p
@@ -95,7 +118,7 @@ aipw_single_p <- function(data, exposure, outcome, covarsT, covarsO, learners, c
     select(s, paste0("mu0_", 1:n_split))
 
   Y_p <-  data_p %>%
-    select(s, outcome)
+    select(s, Y)
 
   X_p <-  data_p %>%
     select(s, exposure)
