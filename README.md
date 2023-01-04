@@ -134,3 +134,9 @@ tmle_result_p3 = clusterMap(cl, function(df, seed) tmle_sim(df, num_cf = 3, n_sp
 
 
 ```
+
+
+
+# References
+Zivich PN, and Breskin A. "Machine learning for causal inference: on the use of cross-fit estimators." Epidemiology 32.3 (2021): 393-401
+
