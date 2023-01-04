@@ -21,38 +21,9 @@ require(SuperLearner)
   2. Define the learners that you want to use in superlearner training
 
 ```{r}
-#Logistic Regression
-  SL.glm.DCDR <- function(...){
-    SL.glm(...)
-  }
-  
-#4 degree GAM
-  SL.gam4.DCDR <- function(...){
-    SL.gam(..., deg.gam=4)
-  }
-  
-#6 degree GAM
-  SL.gam6.DCDR <- function(...){
-    SL.gam(..., deg.gam=6)
-  }
-  
-#Neural Network
-  SL.nnet.DCDR <- function(...){
-    SL.nnet(..., size=4)
-  }
-  
-#Random forest
-  SL.randomForest.DCDR <- function(...){
-    SL.randomForest(..., ntree=500, nodesize=20)
-  }
+# learners can be defined from `Superlearner::SL.library()`
+learners = c("SL.glm","SL.glmnet", "SL.xgboost")  
 
-#Empirical mean
-  SL.mean.DCDR <- function(...){
-    SL.mean(...)
-  }
-  
-
-learners <- c("SL.glm.DCDR", "SL.gam4.DCDR", "SL.gam6.DCDR", "SL.nnet.DCDR", "SL.randomForest.DCDR", "SL.mean.DCDR")
 ```
 
   3. Defining the data you want to use
@@ -67,11 +38,11 @@ df = data
 exposure="statin"
 outcome="Y"
 
-covarsT <- c("age", "ldl_log", "risk_score") # covariate for exposure
-covarsO <- c("age", "ldl_log", "risk_score") # covariate for outcome
+covarsT <- c("age", "ldl_log", "risk_score") # covariate for exposure model
+covarsO <- c("age", "ldl_log", "risk_score") # covariate for outcome model
 
-# Here `V=5' indicates the number of cross-validation folds that is applied in the superlearner training.
-control <- SuperLearner.CV.control(V=5)
+# Controls parameters to be used in cross-validation in the superlearner training. Similar as `Superlearner::cvControl()`
+control <- SuperLearner.CV.control(V=5) 
 
 ## Wrapper functions
 
