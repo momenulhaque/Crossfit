@@ -1,12 +1,12 @@
-# Crossfit: An R package to fit and compare DC-AIPW and DC-TMLE for multiple splits
+# Crossfit: An R package to apply sample splitting (cross-fit) to AIPW and TMLE in causal inference
 
-## How to install and apply DC-AIPW and DC-TMLE on a data set
+## How to install
 
 ```{r}
 devtools::install_github("momenulhaque/Crossfit") # it will install the package
 library(Crossfit) 
 ```
-Now the package is ready to use. It supports applying both DC-AIPW and DC-TMLE for two cases-
+Now the package is ready to use. It supports applying both AIPW and TMLE for two cases-
 
 ### Case 1: Without parallelization
 
