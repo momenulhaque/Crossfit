@@ -38,7 +38,9 @@ n_split = 4 # number of splits
 rand_split = FALSE # splits' crossing pattern is not random
 gbound = 0.025
 alpha = 1e-17
+num_core = 4
 seed = 156
+```
 
  4. Estimating the average treatment effect (ATE)
 
@@ -56,6 +58,7 @@ dc_tmle_par <- par_tmle(data,
                         rand_split,
                         gbound,
                         alpha,
+                        num_core,
                         seed)
 
 ```
