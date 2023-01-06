@@ -1,15 +1,17 @@
-#' Estimate ATE using TMLE estimator using cross-fit algorithm (single repetition)
+#' Estimate Average Treatment Effect (ATE) using TMLE estimator using cross-fit algorithm (single repetition)
 #'
 #' @param data a data frame of tibble
 #' @param exposure name of exposure variable
 #' @param outcome name of outcome variable
 #' @param covarsT a vector of names of covaraites for treatment model
 #' @param covarsO a vector of names of covaraites for outcome model
-#' @param family.y it is the family for outcome model. It can `binomial() (default)` or `"gaussian"`
-#' @param learners similar as \code{\link[Superlearner:SL.library()]{Superlearner::SL.library()}}
-#' @param control similar as  \code{\link[Superlearner:cvControl()]{Superlearner::cvControl()}}
+#' @param family.y it is the family for outcome model. It can `"binomial" (default)` or `"gaussian"`
+#' @param learners similar as \code{SL.library()} in `SuperLearner` package.
+#' @param control similar as  \code{cvControl()} in `SuperLearner` package.
 #' @param n_split number of splits used, default `n_split = 3`
 #' @param rand_split logical value; if be FALSE `(default)`, discordant splits for exposure and outcome model are chosen systematically; otherwise chosen randomly.
+#' @param gbound value between (0,1) for truncation of predicted probabilities. See \code{tmle::tmle()} for more information.
+#' @param alpha used to keep predicted initial values bounded away from (0,1) for logistic fluctuation.
 #' @param seed numeric value to reproduce the splits distribution
 #' @return a tibble of estimates.
 #'
@@ -30,9 +32,6 @@
 #'
 #'
 #'
-
-
-
 tmle_single_p = function(data,
                          exposure,
                          outcome,
@@ -43,8 +42,11 @@ tmle_single_p = function(data,
                          control,
                          n_split,
                          rand_split,
+                         gbound,
+                         alpha,
                          seed){
 
+ # suppressMessages(require(SuperLearner))
   # Split sample
   set.seed(seed)
   splits_p <- sample(rep(1:n_split, diff(floor(nrow(data) * c(0:n_split/n_split)))))
@@ -77,7 +79,7 @@ tmle_single_p = function(data,
   k = dim(data_p)[2]
   for(i in 1:n_split){
     pi[[i]] = predict(dat_nested_p$pi_fit[[i]], newdata = data_pp[, covarsT])$pred
-    pi[[i]] = ifelse(pi[[i]] < 0.025, 0.025, ifelse(pi[[i]] > 0.975, 0.975, pi[[i]]))
+    pi[[i]] = ifelse(pi[[i]] < gbound, gbound, ifelse(pi[[i]] > (1-gbound), (1-gbound), pi[[i]]))
     H1[[i]] = data_pp[, exposure]/pi[[i]]
     H0[[i]] = (1 - data_pp[, exposure])/(1 - pi[[i]])
     data_p = suppressMessages(bind_cols(data_p, pi[[i]], H1[[i]], H0[[i]]))
@@ -88,13 +90,28 @@ tmle_single_p = function(data,
                                                       times = n_split), rep(1:n_split, each = 3)))
 
   #Outcome model
-  mu_fitter <- function(df){
-    SuperLearner::SuperLearner(Y=as.matrix(df[, outcome]),
-                               X=df[, c(exposure, covarsO)],
-                               family=family.y,
-                               SL.library=learners,
-                               cvControl=control)
+
+  if(family.y == "binomial"){
+    mu_fitter <- function(df){
+      SuperLearner::SuperLearner(Y=as.matrix(df[, outcome]),
+                                 X=df[, c(exposure, covarsO)],
+                                 family=binomial(),
+                                 SL.library=learners,
+                                 cvControl=control)
+    }
   }
+
+  if(family.y == "gaussian"){
+    mu_fitter <- function(df){
+      SuperLearner::SuperLearner(Y=as.matrix(df[, outcome]),
+                                 X=df[, c(exposure, covarsO)],
+                                 family="gaussian",
+                                 SL.library=learners,
+                                 cvControl=control)
+    }
+  }
+
+
 
   dat_nested_p <- dat_nested_p %>%
     mutate(mu_fit=map(data, mu_fitter))
@@ -114,22 +131,22 @@ tmle_single_p = function(data,
   if(family.y == "binomial"){
       for(i in 1:n_split){
         mu[[i]] = predict(dat_nested_p$mu_fit[[i]], newdata = data_pp[, c(exposure, covarsO)])$pred
-        mu[[i]] = ifelse(mu[[i]] == 0, 1e-17, ifelse(mu[[i]] == 1, 1-1e-17, mu[[i]]))
+        mu[[i]] = ifelse(mu[[i]] == 0, alpha, ifelse(mu[[i]] == 1, 1-alpha, mu[[i]]))
         mu1[[i]] = predict(dat_nested_p$mu_fit[[i]], newdata = dat1_p[, c(exposure, covarsO)])$pred
-        mu1[[i]] = ifelse(mu1[[i]] == 0, 1e-17, ifelse(mu1[[i]] == 1, 1-1e-17, mu1[[i]]))
+        mu1[[i]] = ifelse(mu1[[i]] == 0, alpha, ifelse(mu1[[i]] == 1, 1-alpha, mu1[[i]]))
         mu0[[i]] = predict(dat_nested_p$mu_fit[[i]], newdata = dat0_p[, c(exposure, covarsO)])$pred
-        mu0[[i]] = ifelse(mu0[[i]] == 0, 1e-17, ifelse(mu0[[i]] == 1, 1-1e-17, mu0[[i]]))
+        mu0[[i]] = ifelse(mu0[[i]] == 0, alpha, ifelse(mu0[[i]] == 1, 1-alpha, mu0[[i]]))
         data_p = suppressMessages(bind_cols(data_p, mu[[i]], mu1[[i]], mu0[[i]]))
       }
   }
   if(family.y == "gaussian"){
     for(i in 1:n_split){
       mu[[i]] = predict(dat_nested_p$mu_fit[[i]], newdata = data_pp[, c(exposure, covarsO)], type = "response")$pred
-      mu[[i]] = ifelse(mu[[i]] <= 0, 1e-17, ifelse(mu[[i]] >= 1, 1-1e-17, mu[[i]]))
+      mu[[i]] = ifelse(mu[[i]] <= 0, alpha, ifelse(mu[[i]] >= 1, 1-alpha, mu[[i]]))
       mu1[[i]] = predict(dat_nested_p$mu_fit[[i]], newdata = dat1_p[, c(exposure, covarsO)], type = "response")$pred
-      mu1[[i]] = ifelse(mu1[[i]] <= 0, 1e-17, ifelse(mu1[[i]] >= 1, 1-1e-17, mu1[[i]]))
+      mu1[[i]] = ifelse(mu1[[i]] <= 0, alpha, ifelse(mu1[[i]] >= 1, 1-alpha, mu1[[i]]))
       mu0[[i]] = predict(dat_nested_p$mu_fit[[i]], newdata = dat0_p[, c(exposure, covarsO)], type = "response")$pred
-      mu0[[i]] = ifelse(mu0[[i]] <= 0, 1e-17, ifelse(mu0[[i]] >= 1, 1-1e-17, mu0[[i]]))
+      mu0[[i]] = ifelse(mu0[[i]] <= 0, alpha, ifelse(mu0[[i]] >= 1, 1-alpha, mu0[[i]]))
       data_p = suppressMessages(bind_cols(data_p, mu[[i]], mu1[[i]], mu0[[i]]))
     }
   }
@@ -174,7 +191,7 @@ tmle_single_p = function(data,
 
 #      if(family.y == "binomial"){
         epsilon[[i]] <- coef(glm(y ~ -1 + h0 + h1 + offset(qlogis(muu)),
-                                 data = data_p %>% filter(s==i), family = binomial))
+                                 data = data_p %>% filter(s==i), family = binomial()))
         mu0_1[[i]] = plogis(qlogis(pull(mu0_p, paste0("mu0_", iid[[i]][2]))) + epsilon[[i]][1] / (1 - pull(pi_p, paste0("pi", iid[[i]][1]))))
         mu1_1[[i]] = plogis(qlogis(pull(mu1_p, paste0("mu1_", iid[[i]][2]))) + epsilon[[i]][2] / pull(pi_p, paste0("pi", iid[[i]][1])))
 
@@ -191,7 +208,7 @@ tmle_single_p = function(data,
       y = pull(data_p %>% filter(s==i), outcome)
 
         epsilon[[i]] <- coef(glm(y ~ -1 + h0 + h1 + offset(qlogis(muu)),
-                                 data = data_p %>% filter(s==i), family = binomial))
+                                 data = data_p %>% filter(s==i), family = binomial()))
         mu0_1[[i]] = plogis(qlogis(pull(mu0_p, paste0("mu0_", mu_id[i]))) + epsilon[[i]][1] / (1 - pull(pi_p, paste0("pi", pi_id[i]))))
         mu1_1[[i]] = plogis(qlogis(pull(mu1_p, paste0("mu1_", mu_id[i]))) + epsilon[[i]][2] / pull(pi_p, paste0("pi", pi_id[i])))
 

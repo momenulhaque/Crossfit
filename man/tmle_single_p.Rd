@@ -2,7 +2,7 @@
 % Please edit documentation in R/tmle_single_p.R
 \name{tmle_single_p}
 \alias{tmle_single_p}
-\title{Estimate ATE using TMLE estimator using cross-fit algorithm (single repetition)}
+\title{Estimate Average Treatment Effect (ATE) using TMLE estimator using cross-fit algorithm (single repetition)}
 \usage{
 tmle_single_p(
   data,
@@ -15,6 +15,8 @@ tmle_single_p(
   control,
   n_split,
   rand_split,
+  gbound,
+  alpha,
   seed
 )
 }
@@ -29,15 +31,19 @@ tmle_single_p(
 
 \item{covarsO}{a vector of names of covaraites for outcome model}
 
-\item{family.y}{it is the family for outcome model. It can \code{binomial() (default)} or \code{"gaussian"}}
+\item{family.y}{it is the family for outcome model. It can \code{"binomial" (default)} or \code{"gaussian"}}
 
-\item{learners}{similar as \code{\link[Superlearner:SL.library()]{Superlearner::SL.library()}}}
+\item{learners}{similar as \code{SL.library()} in \code{SuperLearner} package.}
 
-\item{control}{similar as  \code{\link[Superlearner:cvControl()]{Superlearner::cvControl()}}}
+\item{control}{similar as  \code{cvControl()} in \code{SuperLearner} package.}
 
 \item{n_split}{number of splits used, default \code{n_split = 3}}
 
 \item{rand_split}{logical value; if be FALSE \code{(default)}, discordant splits for exposure and outcome model are chosen systematically; otherwise chosen randomly.}
+
+\item{gbound}{value between (0,1) for truncation of predicted probabilities. See \code{tmle::tmle()} for more information.}
+
+\item{alpha}{used to keep predicted initial values bounded away from (0,1) for logistic fluctuation.}
 
 \item{seed}{numeric value to reproduce the splits distribution}
 }
@@ -45,7 +51,7 @@ tmle_single_p(
 a tibble of estimates.
 }
 \description{
-Estimate ATE using TMLE estimator using cross-fit algorithm (single repetition)
+Estimate Average Treatment Effect (ATE) using TMLE estimator using cross-fit algorithm (single repetition)
 }
 \examples{
 
