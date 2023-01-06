@@ -13,6 +13,7 @@
 #' @param rand_split logical value; if be FALSE `(default)`, discordant splits for exposure and outcome model are chosen systematically; otherwise chosen randomly.
 #' @param gbound value between (0,1) for truncation of predicted probabilities. The defaults are 0.025 and 0.975. See \code{tmle::tmle()} for more information.
 #' @param alpha used to keep predicted initial values bounded away from (0,1) for logistic fluctuation. The defaults are 1e-17 and 1-1e-17.
+#' @param num_core an integer indicating the number of cores to be used for parallelization. The default is all the cores that user owns in the system.
 #' @param seed numeric value to reproduce the splits distribution
 #' @return a tibble of the estimates
 #'
@@ -41,10 +42,11 @@ par_aipw <- function(data,
                      rand_split = FALSE,
                      gbound = 0.025,
                      alpha = 1e-17,
+                     num_core = detectCores(),
                      seed = 145){
 
 
-  cl <- makeCluster(detectCores())
+  cl <- makeCluster(num_core)
 
   #environment(aipw_single_p) <- .GlobalEnv
   suppressMessages(require(SuperLearner))

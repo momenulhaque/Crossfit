@@ -7,7 +7,7 @@ Authors@R:
            role = c("aut", "cre"),
            email = "mhmondol@student.ubc.ca",
            comment = c(ORCID = "0000-0002-2624-2118")),
-    person(given = "Muhammad Ehsanul",
+    person(given = "Mohammad Ehsanul",
            family = "Karim",
            role = "ctb",
            comment = c(ORCID = "0000-0002-0346-2871")))
