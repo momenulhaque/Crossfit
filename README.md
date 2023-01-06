@@ -9,105 +9,63 @@ Author: Momenul Haque Mondol & Mohammad Ehsanul Karim
 devtools::install_github("momenulhaque/Crossfit") # it will install the package
 library(Crossfit) 
 ```
-Now the package is ready to use. It supports applying both AIPW and TMLE for two cases-
-
-### Case 1: Without parallelization
+Now the package is ready to use. It supports applying both AIPW and TMLE. 
 
  1. Install the required R packages
 
 ```{r}
-library(tidyverse)
-require(furrr)
-require(tibble)
 require(SuperLearner)
 ```
-  2. Define the learners that you want to use in superlearner training
-
-```{r}
-# learners can be defined from `Superlearner::SL.library()`
-learners = c("SL.glm","SL.glmnet", "SL.xgboost")  
-
-```
-
-  3. Defining the data you want to use
+ 
+ 2. Defining the data you want to use
  
 ```{r}
-# Read the data set that you want to use. An example data set "data" can be found in this package.
-df = data 
+# Read the data set that you want to use. An example data set "statin_sim_data" can be found in this package.
+data = statin_sim_data 
 ```
-  3. Defining model parameters
+ 3. Defining the model parameters
 
 ```{r}
 exposure="statin"
 outcome="Y"
+covarsT = c("age", "ldl_log", "risk_score") # covariate for exposure model
+covarsO = c("age", "ldl_log", "risk_score") # covariate for outcome model
+family.y = "binomial",
+learners=c("SL.glm", "SL.glmnet", "SL.xgboost")
+control=list(V = 3, stratifyCV = FALSE, shuffle = TRUE, validRows = NULL)
+num_cf = 5 # number of repetitions
+n_split = 4 # number of splits
+rand_split = FALSE # splits' crossing pattern is not random
+gbound = 0.025
+alpha = 1e-17
+seed = 156
 
-covarsT <- c("age", "ldl_log", "risk_score") # covariate for exposure model
-covarsO <- c("age", "ldl_log", "risk_score") # covariate for outcome model
-
-# Controls parameters to be used in cross-validation in the superlearner training. Similar as `Superlearner::cvControl()`
-control <- SuperLearner.CV.control(V=5) 
-
-## Wrapper functions
-
-aipw_sim <- function(df, num_cf = 3, n_split, seed){
-  aipw_output <- aipw_multiple_p(df, exposure, outcome, covarsT, covarsO, learners, control,
-                                 num_cf, n_split, rand_split = TRUE, seed)
-  return(aipw_output)
-}
-
-tmle_sim <- function(df, num_cf = 3, n_split, seed){
-  tmle_output <- tmle_multiple_p(df, exposure, outcome, covarsT, covarsO, learners, control,
-                                 num_cf, n_split, rand_split = TRUE, seed)
-  return(tmle_output)
-}
-```
-  3. Estimating the average causal effect
-  Here the parameters **num_cf** is the number of repeatation, **n_split** is the number of splits and **seed** can be usefull for comparing different methods.
-```{r}
-aipw_result_p3 = aipw_sim(df=data, num_cf = 3, n_split = 3, seed = 123)
-tmle_result_p3 = tmle_sim(df=data, num_cf = 3, n_split = 3, seed = 123)
-```
-
-### Case 2: With parallelization
-The parallelization is very usefull while simulation study is conducted for large number of times. The steps are similar to case 1, except some additional steps-
-
- 1. Do the steps 1-3 that is described in case 1 under parallel packages. 
-
+ 4. Estimating the average treatment effect (ATE)
 
 ```{r}
-############### With parallelization ##############
-library(parallel)
-cl <- makeCluster(detectCores())
-
-parallel::clusterEvalQ(cl, {
-  
-  library(Crossfit)
-  library(tidyverse)
-  require(furrr)
-  require(tibble)
-  require(SuperLearner)
-  
- # Run the codes from Step 1
- # Run the codes from Step 2
- # Run the codes from Step 3
-
-})
+dc_tmle_par <- par_tmle(data=statin_sim_data,
+                        exposure="statin",
+                        outcome="Y",
+                        covarsT=covars,
+                        covarsO=covars,
+                        family.y = "binomial",
+                        learners=c("SL.glm", "SL.glmnet", "SL.xgboost"),
+                        control=list(V = 3, stratifyCV = FALSE,
+                                     shuffle = TRUE, validRows = NULL),
+                        num_cf = 5, # number of repetitions
+                        n_split = 4, # number of splits
+                        rand_split = FALSE, # splits' crossing pattern is not random
+                        gbound = 0.025,
+                        alpha = 1e-17,
+                        seed = 156)
 
 ```
 
+  5. Understanding the results
 
- 2. Apply the following codes for estimating average causal effect under parallel packages-
- All the data set should be stored in a list object. I just made a list of two data sets using the same data `data'  to apply clusterMap function.
+The object `dc_tmle_par` contains a list of three elements and each one is a data frame of four columns. The first element `ATE` shows the average treatment effect where point estimate (`Estimate`), its standard error (`std.error`), 95% lower and upper confidence limits (`lower_ci` and `upper_ci`) are returned. Similarly, the second and third elements `r1` and `r0` provides the effect estimates, standard errors, and confidence intervals of exposed and non-exposed groups, respectively. 
 
-```{r}
-aipw_result_p3 = clusterMap(cl, function(df, seed) aipw_sim(df, num_cf = 3, n_split = 3, seed),
-                            df=list(data, data) , seed=list(1:2))
-
-tmle_result_p3 = clusterMap(cl, function(df, seed) tmle_sim(df, num_cf = 3, n_split = 3, seed),
-                            df=list(data, data) , seed=list(1:2))
-
-
-```
+The AIPW can be implemented using  `par_aipw()` function.
 
 
 
