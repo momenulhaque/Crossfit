@@ -66,9 +66,10 @@ par_aipw <- function(data,
 
   parallel::clusterEvalQ(cl, {
 
+
     aipw_par <- function(seed, ...){
 
-                aipw_single_p(data=data,
+      Crossfit::aipw_single_p(data=data,
                               exposure=exposure,
                               outcome=outcome,
                               covarsT=covarsT,

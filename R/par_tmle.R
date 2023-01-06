@@ -66,9 +66,10 @@ par_tmle <- function(data,
 
   parallel::clusterEvalQ(cl, {
 
+
   tmle_par <- function(seed, ...){
 
-     tmle_single_p(data=data,
+     Crossfit::tmle_single_p(data=data,
                    exposure=exposure,
                    outcome=outcome,
                    covarsT=covarsT,
