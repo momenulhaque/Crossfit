@@ -6,7 +6,7 @@ Author: Momenul Haque Mondol & Mohammad Ehsanul Karim
 ## How to install
 
 ```{r}
-devtools::install_github("momenulhaque/Crossfit") # it will install the package
+remotes::install_github("momenulhaque/Crossfit") # it will install the package
 library(Crossfit) 
 ```
 Now the package is ready to use. It supports applying both AIPW and TMLE. 
