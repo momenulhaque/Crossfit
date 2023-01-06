@@ -30,7 +30,7 @@ exposure="statin"
 outcome="Y"
 covarsT = c("age", "ldl_log", "risk_score") # covariate for exposure model
 covarsO = c("age", "ldl_log", "risk_score") # covariate for outcome model
-family.y = "binomial",
+family.y = "binomial"
 learners=c("SL.glm", "SL.glmnet", "SL.xgboost")
 control=list(V = 3, stratifyCV = FALSE, shuffle = TRUE, validRows = NULL)
 num_cf = 5 # number of repetitions
@@ -43,21 +43,20 @@ seed = 156
  4. Estimating the average treatment effect (ATE)
 
 ```{r}
-dc_tmle_par <- par_tmle(data=statin_sim_data,
-                        exposure="statin",
-                        outcome="Y",
-                        covarsT=covars,
-                        covarsO=covars,
-                        family.y = "binomial",
-                        learners=c("SL.glm", "SL.glmnet", "SL.xgboost"),
-                        control=list(V = 3, stratifyCV = FALSE,
-                                     shuffle = TRUE, validRows = NULL),
-                        num_cf = 5, # number of repetitions
-                        n_split = 4, # number of splits
-                        rand_split = FALSE, # splits' crossing pattern is not random
-                        gbound = 0.025,
-                        alpha = 1e-17,
-                        seed = 156)
+dc_tmle_par <- par_tmle(data,
+                        exposure,
+                        outcome,
+                        covarsT,
+                        covarsO,
+                        family.y,
+                        learners,
+                        control,
+                        num_cf, 
+                        n_split ,
+                        rand_split,
+                        gbound,
+                        alpha,
+                        seed)
 
 ```
 
