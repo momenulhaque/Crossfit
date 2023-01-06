@@ -293,4 +293,4 @@ tmle_single_p = function(data,
   return(results)
 }
 
-
+environment(tmle_single_p) <- .GlobalEnv

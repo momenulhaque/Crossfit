@@ -46,6 +46,13 @@ par_aipw <- function(data,
 
   cl <- makeCluster(detectCores())
 
+  #environment(aipw_single_p) <- .GlobalEnv
+  suppressMessages(require(SuperLearner))
+  suppressMessages(require(dplyr))
+  suppressMessages(require(tibble))
+  suppressMessages(require(tidyr))
+  suppressMessages(require(purrr))
+  suppressMessages(require(furrr))
   parallel::clusterExport(cl=cl,
                           varlist=c("data",
                                     "exposure",
@@ -69,7 +76,7 @@ par_aipw <- function(data,
 
     aipw_par <- function(seed, ...){
 
-      Crossfit::aipw_single_p(data=data,
+      aipw_single_p(data=data,
                               exposure=exposure,
                               outcome=outcome,
                               covarsT=covarsT,

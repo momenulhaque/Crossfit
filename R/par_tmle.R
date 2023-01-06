@@ -46,6 +46,8 @@ par_tmle <- function(data,
 
   cl <- makeCluster(detectCores())
 
+
+
   parallel::clusterExport(cl=cl,
                           varlist=c("data",
                                     "exposure",
@@ -59,17 +61,22 @@ par_tmle <- function(data,
                                     "rand_split",
                                     "gbound",
                                     "alpha",
-                                    "seed"),
+                                    "seed",
+                                    "tmle_single_p"),
                           envir=environment()
   )
 
 
   parallel::clusterEvalQ(cl, {
-
-
+  suppressMessages(require(SuperLearner))
+  suppressMessages(require(dplyr))
+  suppressMessages(require(tibble))
+  suppressMessages(require(tidyr))
+  suppressMessages(require(purrr))
+  suppressMessages(require(furrr))
   tmle_par <- function(seed, ...){
 
-     Crossfit::tmle_single_p(data=data,
+     tmle_single_p(data=data,
                    exposure=exposure,
                    outcome=outcome,
                    covarsT=covarsT,

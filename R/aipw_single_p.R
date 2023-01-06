@@ -218,4 +218,4 @@ aipw_single_p <- function(data,
   return(results)
 }
 
-
+environment(aipw_single_p) <- .GlobalEnv
