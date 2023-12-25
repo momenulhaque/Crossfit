@@ -31,6 +31,7 @@ outcome="Y"
 covarsT = c("age", "ldl_log", "risk_score") # covariate for exposure model
 covarsO = c("age", "ldl_log", "risk_score") # covariate for outcome model
 family.y = "binomial"
+# Learners are specified for prediction in the intermediate steps. We have specified only three learners here as example.
 learners=c("SL.glm", "SL.glmnet", "SL.xgboost")
 control=list(V = 3, stratifyCV = FALSE, shuffle = TRUE, validRows = NULL)
 num_cf = 5 # number of repetitions
