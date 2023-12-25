@@ -1,4 +1,4 @@
-# Crossfit: An R package to apply sample splitting (cross-fit) to AIPW and TMLE in causal inference
+# Crossfit: An R package to apply sample splitting (crossfit) to AIPW and TMLE in causal inference
 ---
 Author: Momenul Haque Mondol & Mohammad Ehsanul Karim
 ---
@@ -38,14 +38,14 @@ n_split = 4 # number of splits
 rand_split = FALSE # splits' crossing pattern is not random
 gbound = 0.025
 alpha = 1e-17
-num_core = 4
 seed = 156
+conf.level = 0.95 # confidence level for confidence interval (default 0.95)
 ```
 
  4. Estimating the average treatment effect (ATE)
 
 ```{r}
-dc_tmle_par <- par_tmle(data,
+fit_tmle <- DC_tmle_k(data,
                         exposure,
                         outcome,
                         covarsT,
@@ -58,19 +58,18 @@ dc_tmle_par <- par_tmle(data,
                         rand_split,
                         gbound,
                         alpha,
-                        num_core,
-                        seed)
+                        seed,
+                        conf.level)
 
 ```
 
-  5. Understanding the results
+5. Understanding the results
 
-The object `dc_tmle_par` contains a list of three elements and each one is a data frame of four columns. The first element `ATE` shows the average treatment effect where point estimate (`Estimate`), its standard error (`std.error`), 95% lower and upper confidence limits (`lower_ci` and `upper_ci`) are returned. Similarly, the second and third elements `r1` and `r0` provides the effect estimates, standard errors, and confidence intervals of exposed and non-exposed groups, respectively. 
+The object `fit_tmle` contains a list of two elements, `ATE` and `weight`. The first element `ATE` reports the average treatment effect (`rd`), its standard error (`se`), and confidence limit (`lower.ci` and `upper.ci`). The second element `weight` reports learner specific weights for exposure and outcome model. The weights are averaged over the repetitions.
 
-The AIPW can be implemented using  `par_aipw()` function.
+The AIPW can be implemented using  `DC_aipw_k()` function which provides exactly similar outputs.
 
 
 
 # References
 Zivich PN, and Breskin A. "Machine learning for causal inference: on the use of cross-fit estimators." Epidemiology 32.3 (2021): 393-401
-
