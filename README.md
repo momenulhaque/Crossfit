@@ -65,13 +65,13 @@ fit_tmle_g1 <- DC_tmle_g1_k(data,
 
  5. Understanding the results
 
-The object `fit_tmle_g1` contains risk difference (`rd`), standard error (`se`), lower and upper confidence interval (`lower.ci` and `upper.ci` respectively). 
+The object `fit_tmle_g1` contains risk difference (`ATE`), standard error (`se`), lower and upper confidence interval (`lower.ci` and `upper.ci` respectively). 
 
 ```{r}
 fit_tmle_g1
 
 # A tibble: 1 × 4
-#       rd     se lower.ci upper.ci
+#      ATE     se lower.ci upper.ci
 #    <dbl>  <dbl>    <dbl>    <dbl>
 #   -0.115 0.0151   -0.157  -0.0726
 
@@ -102,13 +102,13 @@ fit_tmle_g2 <- DC_tmle_g2_k(data,
 
 5. Understanding the results for generalization 2
 
-The object `fit_tmle_g2` contains risk difference (`rd`), standard error (`se`), lower and upper confidence interval (`lower.ci` and `upper.ci` respectively). 
+The object `fit_tmle_g2` contains risk difference (`ATE`), standard error (`se`), lower and upper confidence interval (`lower.ci` and `upper.ci` respectively). 
 
 ```{r}
 fit_tmle_g2
 
 # A tibble: 1 × 4
-#       rd     se lower.ci upper.ci
+#      ATE     se lower.ci upper.ci
 #    <dbl>  <dbl>    <dbl>    <dbl>
 #   -0.114 0.0208   -0.172  -0.0566
 
