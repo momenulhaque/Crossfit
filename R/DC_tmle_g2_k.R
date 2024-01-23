@@ -108,7 +108,7 @@ DC_tmle_g2_k <- function(data,
   l_ci = results[1] - t.value*sqrt(results[3])
   u_ci = results[1] + t.value*sqrt(results[3])
 
-  res1 = tibble(rd=results[1], se = sqrt(results[3]), lower.ci = l_ci, upper.ci = u_ci)
+  res1 = tibble(ATE=results[1], se = sqrt(results[3]), lower.ci = l_ci, upper.ci = u_ci)
 
   # fit <- list()
   # fit$ATE = res
