@@ -37,9 +37,9 @@ DC_tmle_g2_k <- function(data,
                          family.y="binomial",
                          learners,
                          control,
-                         n_split,
-                         num_cf,
-                         rand_split,
+                         n_split = 3,
+                         num_cf = 10,
+                         rand_split=FALSE,
                          gbound = 0.025,
                          alpha = 1e-17,
                          seed=146,
@@ -73,7 +73,7 @@ DC_tmle_g2_k <- function(data,
     }, silent = TRUE)
 
     if (inherits(g2_fit_sngle_result, "try-error")) {
-      fit_sngle <- placeholder_output
+      fit_sngle <- data.frame(rd=NA, var = NA)
     } else {
       fit_sngle <- g2_fit_sngle_result
     }
@@ -81,23 +81,21 @@ DC_tmle_g2_k <- function(data,
     runs[[cf]] <- fit_sngle
   }
 
-  res = purrr::map(runs, "results") %>%
-    dplyr::bind_rows() %>%
-    dplyr::filter(!is.na(rd))
-
-  weight1 = purrr::map(runs, "weight") %>%
-    dplyr::bind_rows() %>%
-    dplyr::filter(!is.na(model))
-
-  result <- weight1 %>%
-    dplyr::group_by(model, split) %>%
-    dplyr::summarise(across(where(is.numeric), summarize_multiple, .names = "{col}_{fn}"), .groups = "drop") %>%
-    select(-matches("n.avail") | prev_n.avail)
-
-  result_summary <- result %>%
-    dplyr::group_by(model) %>%
-    dplyr::summarise(across(matches("_mean$"), mean, na.rm = TRUE, .names = "{col}"))
-
+  res = dplyr::bind_rows(runs)
+  #
+  #   weight1 = purrr::map(runs, "weight") %>%
+  #     dplyr::bind_rows() %>%
+  #     dplyr::filter(!is.na(model))
+  #
+  #   result <- weight1 %>%
+  #     dplyr::group_by(model, split) %>%
+  #     dplyr::summarise(across(where(is.numeric), summarize_multiple, .names = "{col}_{fn}"), .groups = "drop") %>%
+  #     select(-matches("n.avail") | prev_n.avail)
+  #
+  #   result_summary <- result %>%
+  #     dplyr::group_by(model) %>%
+  #     dplyr::summarise(across(matches("_mean$"), mean, na.rm = TRUE, .names = "{col}"))
+  #
 
   medians <- apply(res, 2, median, na.rm = TRUE)
 
@@ -105,20 +103,18 @@ DC_tmle_g2_k <- function(data,
 
   results <- apply(res, 2, median, na.rm = TRUE)
 
-  t.value = qt((1-conf.level)/2, nrow(res), lower.tail = F)
+  t.value = qt((1-conf.level)/2, nrow(data), lower.tail = F)
 
   l_ci = results[1] - t.value*sqrt(results[3])
   u_ci = results[1] + t.value*sqrt(results[3])
 
-  res = tibble(rd=results[1], se = sqrt(results[3]), lower.ci = l_ci, upper.ci = u_ci)
+  res1 = tibble(rd=results[1], se = sqrt(results[3]), lower.ci = l_ci, upper.ci = u_ci)
 
-  fit <- list()
-
-  fit$ATE = res
-  fit$weight = result_summary
+  # fit <- list()
+  # fit$ATE = res
+  # fit$weight = result_summary
   # fit$weight.summary = result
   # fit$weight.all = weight1
-  #fit
-  return(res)
-
+  # fit
+  return(res1)
 }

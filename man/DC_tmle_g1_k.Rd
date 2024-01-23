@@ -15,7 +15,7 @@ DC_tmle_g1_k(
   control,
   n_split,
   num_cf,
-  rand_split,
+  rand_split = FALSE,
   gbound = 0.025,
   alpha = 1e-17,
   seed = 146,
