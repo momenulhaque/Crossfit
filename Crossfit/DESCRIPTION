@@ -1,0 +1,31 @@
+Package: crossfitk
+Title: Estimate ATE from AIPW or TMLE estimator in causal inference
+Version: 0.1.0
+Authors@R:
+    c(person(given = "Momenul Haque",
+           family = "Mondol",
+           role = c("aut", "cre"),
+           email = "mhmondol@student.ubc.ca",
+           comment = c(ORCID = "0000-0002-2624-2118")),
+    person(given = "Mohammad Ehsanul",
+           family = "Karim",
+           role = "ctb",
+           comment = c(ORCID = "0000-0002-0346-2871")))
+Description: Sample splitting (cross-fit) is applied to AIPW and TMLE to draw
+  causal inference. Crossfit can be applied on AIPW and TMLE both for binary
+  and continuous outcome. 
+License: GPL (>= 3)
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.2.3
+Imports: 
+    dplyr,
+    tidyr,
+    furrr,
+    purrr,
+    tibble,
+    tmle, 
+    SuperLearner
+Depends: 
+    R (>= 2.10)
+LazyData: true

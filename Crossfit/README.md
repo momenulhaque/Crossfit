@@ -1,4 +1,4 @@
-# Crossfit: An R package to apply sample splitting (crossfit) to TMLE in causal inference
+# crossfitk: An R package to apply sample splitting (crossfit) to AIPW and TMLE in causal inference
 ---
 Author: Momenul Haque Mondol & Mohammad Ehsanul Karim
 ---
@@ -6,8 +6,8 @@ Author: Momenul Haque Mondol & Mohammad Ehsanul Karim
 ## How to install
 
 ```{r}
-remotes::install_github("momenulhaque/Crossfit") # it will install the package
-library(Crossfit) 
+remotes::install_github("momenulhaque/crossfitk") # it will install the package
+library(crossfitk) 
 ```
 Now the package is ready to use. It supports applying both AIPW and TMLE. 
 
@@ -42,10 +42,10 @@ seed = 156
 conf.level = 0.95 # confidence level for confidence interval (default 0.95)
 ```
 
- 4. Estimating the average treatment effect (ATE) using generalization 1. 
+ 4. Estimating the average treatment effect (ATE)
 
 ```{r}
-fit_tmle_g1 <- DC_tmle_g1_k(data,
+fit_tmle <- DC_tmle_k(data,
                         exposure,
                         outcome,
                         covarsT,
@@ -63,56 +63,12 @@ fit_tmle_g1 <- DC_tmle_g1_k(data,
 
 ```
 
- 5. Understanding the results
+5. Understanding the results
 
-The object `fit_tmle_g1` contains risk difference (`rd`), standard error (`se`), lower and upper confidence interval (`lower.ci` and `upper.ci` respectively). 
+The object `fit_tmle` contains a list of two elements, `ATE` and `weight`. The first element `ATE` reports the average treatment effect (`rd`), its standard error (`se`), and confidence limit (`lower.ci` and `upper.ci`). The second element `weight` reports learner specific weights for exposure and outcome model. The weights are averaged over the repetitions.
 
-```{r}
-fit_tmle_g1
+The AIPW can be implemented using  `DC_aipw_k()` function which provides exactly similar outputs.
 
-# A tibble: 1 × 4
-#       rd     se lower.ci upper.ci
-#    <dbl>  <dbl>    <dbl>    <dbl>
-#   -0.115 0.0151   -0.157  -0.0726
-
-```
-
-
-
- 6. Estimating the ATE using generalization 2. 
-
-```{r}
-fit_tmle_g2 <- DC_tmle_g2_k(data,
-                        exposure,
-                        outcome,
-                        covarsT,
-                        covarsO,
-                        family.y,
-                        learners,
-                        control,
-                        num_cf, 
-                        n_split ,
-                        rand_split,
-                        gbound,
-                        alpha,
-                        seed,
-                        conf.level)
-
-```
-
-5. Understanding the results for generalization 2
-
-The object `fit_tmle_g2` contains risk difference (`rd`), standard error (`se`), lower and upper confidence interval (`lower.ci` and `upper.ci` respectively). 
-
-```{r}
-fit_tmle_g2
-
-# A tibble: 1 × 4
-#       rd     se lower.ci upper.ci
-#    <dbl>  <dbl>    <dbl>    <dbl>
-#   -0.114 0.0208   -0.172  -0.0566
-
-```
 
 
 # References
