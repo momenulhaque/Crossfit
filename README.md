@@ -1,4 +1,4 @@
-# Crossfit: An R package to apply sample splitting (crossfit) to TMLE in causal inference
+# Crossfit: An R Package Apply Double Cross-fit Approach to TMLE in Causal Inference
 ---
 Author: Momenul Haque Mondol & Mohammad Ehsanul Karim
 ---
