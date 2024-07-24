@@ -1,4 +1,4 @@
-# Crossfit: An R Package Apply Double Cross-fit Approach to TMLE in Causal Inference
+# Crossfit: An R Package to Apply Double Cross-fit Approach to TMLE in Causal Inference
 ---
 Author: Momenul Haque Mondol & Mohammad Ehsanul Karim
 ---
