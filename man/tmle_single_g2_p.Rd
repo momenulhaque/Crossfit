@@ -10,13 +10,13 @@ tmle_single_g2_p(
   outcome,
   covarsT,
   covarsO,
-  family.y = "binomial",
+  family.y,
   learners,
   control,
-  n_split = 5,
-  rand_split = FALSE,
-  gbound = 5/sqrt(2418)/log(2418),
-  alpha = 5e-04,
+  n_split,
+  rand_split,
+  gbounds,
+  Qbounds,
   seed = 146
 )
 }
@@ -41,14 +41,14 @@ tmle_single_g2_p(
 
 \item{rand_split}{logical value; if be FALSE \code{(default)}, discordant splits for exposure and outcome model are chosen systematically; otherwise chosen randomly.}
 
-\item{gbound}{value between (0,1) for truncation of predicted probabilities. See \code{tmle::tmle()} for more information.}
+\item{gbounds}{value between (0,1) for truncation of predicted probabilities of exposure. The defaults are 5/sqrt(n)log(n) and 1-5/sqrt(n)log(n). See \code{tmle::tmle()} for more information.}
 
-\item{alpha}{used to keep predicted initial values bounded away from (0,1) for logistic fluctuation.}
+\item{Qbounds}{used to keep predicted probabilities of outcomes values bounded away from (0,1). The defaults are 5e-04 and 1-5e-04.}
 
 \item{seed}{numeric value to reproduce the splits distribution}
 }
 \value{
-a tibble of estimates.
+A tibble containing risk (or mean) difference (\code{rd}), variance of the estimated \code{rd}.
 }
 \description{
 Estimate Average Treatment Effect (ATE) using TMLE estimator using cross-fit algorithm for single repetition (generalization 2)

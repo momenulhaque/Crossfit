@@ -2,7 +2,7 @@
 % Please edit documentation in R/DC_tmle_g1_k.R
 \name{DC_tmle_g1_k}
 \alias{DC_tmle_g1_k}
-\title{Estimate Average Treatment Effect (ATE) using from TMLE estimator using cross-fit algorithm (generalization 1)}
+\title{Estimate Average Treatment Effect (ATE) using the TMLE estimator with cross-fit algorithm (generalization 1)}
 \usage{
 DC_tmle_g1_k(
   data,
@@ -16,54 +16,78 @@ DC_tmle_g1_k(
   n_split,
   num_cf,
   rand_split = FALSE,
-  gbound = 0.025,
-  alpha = 1e-17,
+  gbounds = NULL,
+  Qbounds = 5e-04,
   seed = 146,
-  conf.level = 0.95
+  conf.level = 0.95,
+  stat = "median"
 )
 }
 \arguments{
-\item{data}{a data frame of tibble}
+\item{data}{A data frame or tibble containing the dataset.}
 
-\item{exposure}{name of exposure variable}
+\item{exposure}{Name of the exposure variable (treatment indicator).}
 
-\item{outcome}{name of outcome variable}
+\item{outcome}{Name of the outcome variable.}
 
-\item{covarsT}{a vector of names of covaraites for treatment model}
+\item{covarsT}{A vector of names of covariates for the treatment model.}
 
-\item{covarsO}{a vector of names of covaraites for outcome model}
+\item{covarsO}{A vector of names of covariates for the outcome model.}
 
-\item{family.y}{it is the family for outcome model. It can \code{binomial() (default)} or \code{"gaussian"}}
+\item{family.y}{The family for the outcome model. It can be \code{binomial()} (default) or \code{"gaussian"}.}
 
-\item{learners}{similar as\code{SL.library()} in \code{SuperLearner} package.}
+\item{learners}{Similar to \code{SL.library()} in the \code{SuperLearner} package, specifying the learners to be used.}
 
-\item{control}{similar as \code{cvControl()} in \code{SuperLearner} package.}
+\item{control}{Similar to \code{cvControl()} in the \code{SuperLearner} package, specifying the control parameters.}
 
-\item{n_split}{number of splits used, default \code{n_split = 3}}
+\item{n_split}{Number of splits used. The default is \code{n_split = 3}.}
 
-\item{num_cf}{number of repetition done. The default is 5.}
+\item{num_cf}{Number of repetitions. The default is 5.}
 
-\item{rand_split}{logical value; if be FALSE \code{(default)}, discordant splits for exposure and outcome model are chosen systematically; otherwise chosen randomly.}
+\item{rand_split}{Logical value. If \code{FALSE} (default), discordant splits for exposure and outcome models are chosen systematically; otherwise, they are chosen randomly.}
 
-\item{gbound}{value between (0,1) for truncation of predicted probabilities. The defaults are 0.025 and 0.975. See \code{tmle::tmle()} for more information.}
+\item{gbounds}{A numeric vector of length 2 specifying the bounds for truncation of predicted probabilities of exposure. The defaults are 5/sqrt(n)log(n) and 1-5/sqrt(n)log(n). See \code{tmle::tmle()} for more information.}
 
-\item{alpha}{used to keep predicted initial values bounded away from (0,1) for logistic fluctuation. The defaults are 1e-17 and 1-1e-17.}
+\item{Qbounds}{A numeric vector of length 2 specifying the bounds for predicted probabilities of outcomes. The defaults are 5e-04 and 1-5e-04.}
 
-\item{seed}{numeric value to reproduce the splits distribution}
+\item{seed}{Numeric value for reproducibility of splits.}
 
-\item{conf.level}{confidence limit for confidence interval, \code{default = 0.95}.}
+\item{conf.level}{Confidence level for confidence intervals. Default is 0.95.}
+
+\item{stat}{Name of the summary statistics, "median" (default) or "mean", to calculate the overall ATE from the repetition-specific estimates.}
 }
 \value{
-It return a list of two elements. The first element \code{ATE} is a tibble of the estimates. The \code{weight} is a tibble of weights of learners for two different models.
+A tibble containing risk (or mean) difference (\code{ATE}), standard error (\code{se}), lower and upper confidence intervals (\code{lower.ci} and \code{upper.ci}, respectively).
 }
 \description{
-Estimate Average Treatment Effect (ATE) using from TMLE estimator using cross-fit algorithm (generalization 1)
+This function estimates the Average Treatment Effect (ATE) by applying the Targeted Maximum Likelihood Estimator (TMLE) using a cross-fit approach. The package provides tools for data simulation and model fitting.
 }
+\section{Data Generation}{
+
+The package includes a function, \code{gen.data}, to generate synthetic datasets for simulation studies. The function creates covariates and treatment indicators, and can generate counterfactual outcomes based on user-defined parameters.
+}
+
 \examples{
 
-# See the README file for details
+# Generate a synthetic dataset with 1200 observations
+data <- gen.data(n = 1200, do.misp = TRUE, my.transform = TRUE, seed = 234)
+head(data)
 
-sum(1:5)
+# Fit the TMLE model to the generated data
+fit_tmle_g1 <- DC_tmle_g1_k(data = data, exposure = "X", outcome = "Y",
+                            covarsT = c("C1", "C2", "C3", "C4"),
+                            covarsO = c("C1", "C2", "C3", "C4"),
+                            family.y = "gaussian",
+                            learners = c("SL.glm", "SL.mean"),
+                            control = list(V = 3, stratifyCV = FALSE, shuffle = TRUE, validRows = NULL),
+                            num_cf = 5, n_split = 3, rand_split = FALSE,
+                            Qbounds = 0.0025, gbounds = 0.0025, seed = 236,
+                            conf.level = 0.95, stat = "median")
 
+# Display the results
+print(fit_tmle_g1)
 
+}
+\references{
+Kang, J. D. Y., & Schafer, J. L. (2007). Demystifying Double Robustness: A Comparison of Alternative Strategies for Estimating a Population Mean from Incomplete Data. \emph{Statistical Science}, 22(4), 523-539.
 }

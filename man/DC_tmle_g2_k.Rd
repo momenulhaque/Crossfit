@@ -13,13 +13,14 @@ DC_tmle_g2_k(
   family.y = "binomial",
   learners,
   control,
-  n_split = 3,
-  num_cf = 10,
+  n_split,
+  num_cf,
   rand_split = FALSE,
-  gbound = 0.025,
-  alpha = 1e-17,
+  gbounds = NULL,
+  Qbounds = 5e-04,
   seed = 146,
-  conf.level = 0.95
+  conf.level = 0.95,
+  stat = "median"
 )
 }
 \arguments{
@@ -45,25 +46,46 @@ DC_tmle_g2_k(
 
 \item{rand_split}{logical value; if be FALSE \code{(default)}, discordant splits for exposure and outcome model are chosen systematically; otherwise chosen randomly.}
 
-\item{gbound}{value between (0,1) for truncation of predicted probabilities. The defaults are 0.025 and 0.975. See \code{tmle::tmle()} for more information.}
-
-\item{alpha}{used to keep predicted initial values bounded away from (0,1) for logistic fluctuation. The defaults are 1e-17 and 1-1e-17.}
-
 \item{seed}{numeric value to reproduce the splits distribution}
 
 \item{conf.level}{confidence limit for confidence interval, \code{default = 0.95}.}
+
+\item{gbound}{value between (0,1) for truncation of predicted probabilities. The defaults are 0.025 and 0.975. See \code{tmle::tmle()} for more information.}
+
+\item{alpha}{used to keep predicted initial values bounded away from (0,1) for logistic fluctuation. The defaults are 1e-17 and 1-1e-17.}
 }
 \value{
-It return a list of two elements. The first element \code{ATE} is a tibble of the estimates. The \code{weight} is a tibble of weights of learners for two different models.
+A tibble containing risk (or mean) difference (\code{ATE}), standard error (\code{se}), lower and upper confidence intervals (\code{lower.ci} and \code{upper.ci}, respectively).
 }
 \description{
 Estimate Average Treatment Effect (ATE) using from TMLE estimator using cross-fit algorithm (generalization 2)
 }
+\section{Data Generation}{
+
+The package includes a function, \code{gen.data}, to generate synthetic datasets for simulation studies. The function creates covariates and treatment indicators, and can generate counterfactual outcomes based on user-defined parameters.
+}
+
 \examples{
 
-# See the README file for details
+# Generate a synthetic dataset with 1200 observations
+data <- gen.data(n = 1200, do.misp = TRUE, my.transform = TRUE, seed = 234)
+head(data)
 
-sum(1:5)
+# Fit the TMLE model to the generated data
+fit_tmle_g2 <- DC_tmle_g2_k(data = data, exposure = "X", outcome = "Y",
+                            covarsT = c("C1", "C2", "C3", "C4"),
+                            covarsO = c("C1", "C2", "C3", "C4"),
+                            family.y = "gaussian",
+                            learners = c("SL.glm", "SL.mean"),
+                            control = list(V = 3, stratifyCV = FALSE, shuffle = TRUE, validRows = NULL),
+                            num_cf = 5, n_split = 5, rand_split = FALSE,
+                            Qbounds = 0.0025, gbounds = 0.0025, seed = 236,
+                            conf.level = 0.95, stat = "median")
 
+# Display the results
+print(fit_tmle_g2)
 
+}
+\references{
+Kang, J. D. Y., & Schafer, J. L. (2007). Demystifying Double Robustness: A Comparison of Alternative Strategies for Estimating a Population Mean from Incomplete Data. \emph{Statistical Science}, 22(4), 523-539.
 }

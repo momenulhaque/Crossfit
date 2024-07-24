@@ -10,16 +10,14 @@
 #' @param control similar as  \code{cvControl()} in `SuperLearner` package.
 #' @param n_split number of splits used, default `n_split = 3`
 #' @param rand_split logical value; if be FALSE `(default)`, discordant splits for exposure and outcome model are chosen systematically; otherwise chosen randomly.
-#' @param gbound value between (0,1) for truncation of predicted probabilities. See \code{tmle::tmle()} for more information.
-#' @param alpha used to keep predicted initial values bounded away from (0,1) for logistic fluctuation.
+#' @param gbounds value between (0,1) for truncation of predicted probabilities of exposure. The defaults are 5/sqrt(n)log(n) and 1-5/sqrt(n)log(n). See \code{tmle::tmle()} for more information.
+#' @param Qbounds used to keep predicted probabilities of outcomes values bounded away from (0,1). The defaults are 5e-04 and 1-5e-04.
 #' @param seed numeric value to reproduce the splits distribution
-#' @return a tibble of estimates.
+#' @return A tibble containing risk (or mean) difference (`rd`), variance of the estimated `rd`.
 #'
 #' @import dplyr tibble tidyr purrr furrr tmle
 #'
 #' @importFrom stats binomial coef glm median plogis predict qlogis var
-#'
-#'
 #'
 #' @export
 #'
@@ -33,26 +31,32 @@
 #'
 #'
 tmle_single_g1_p = function(data,
-                          exposure,
-                          outcome,
-                          covarsT,
-                          covarsO,
-                          family.y = "binomial",
-                          learners,
-                          control,
-                          n_split = 5,
-                          rand_split = FALSE,
-                          gbound = 5/sqrt(2418)/log(2418),
-                          alpha = 5e-04,
-                          seed=146){
+                            exposure,
+                            outcome,
+                            covarsT,
+                            covarsO,
+                            family.y,
+                            learners,
+                            control,
+                            n_split,
+                            rand_split,
+                            gbounds,
+                            Qbounds,
+                            seed=146){
 
-  # suppressMessages(require(SuperLearner))
-  # Split sample
 
   #### step: 1.1 ############
 
   set.seed(seed)
   splits_p <- sample(rep(1:n_split, diff(floor(nrow(data) * c(0:n_split/n_split)))))
+
+  if(family.y == "gaussian"){
+    original.Y = outcome
+    min.Y = min(data[, outcome])
+    max.Y = max(data[, outcome])
+    data$Y.star = (data[, outcome] - min.Y)/(max.Y-min.Y)
+    outcome = "Y.star"
+  }
 
   data_pp = data_p = data %>% mutate(s=splits_p)  %>% arrange(s)
 
@@ -82,7 +86,7 @@ tmle_single_g1_p = function(data,
   k = dim(data_p)[2]
   for(i in 1:n_split){
     pi[[i]] = predict(dat_nested_p$pi_fit[[i]], newdata = data_pp[, covarsT])$pred
-    pi[[i]] = ifelse(pi[[i]] < gbound, gbound, ifelse(pi[[i]] > (1-gbound), (1-gbound), pi[[i]]))
+    pi[[i]] = ifelse(pi[[i]] < gbounds, gbounds, ifelse(pi[[i]] > (1-gbounds), (1-gbounds), pi[[i]]))
     H1[[i]] = data_pp[, exposure]/pi[[i]]
     H0[[i]] = (1 - data_pp[, exposure])/(1 - pi[[i]])
     data_p = suppressMessages(bind_cols(data_p, pi[[i]], H1[[i]], H0[[i]]))
@@ -139,22 +143,22 @@ tmle_single_g1_p = function(data,
   if(family.y == "binomial"){
     for(i in 1:n_split){
       mu[[i]] = predict(dat_nested_p$mu_fit[[i]], newdata = data_pp[, c(exposure, covarsO)], type = "response")$pred
-      mu[[i]] = ifelse(mu[[i]] == 0, alpha, ifelse(mu[[i]] == 1, 1-alpha, mu[[i]]))
+      mu[[i]] = ifelse(mu[[i]] < Qbounds, Qbounds, ifelse(mu[[i]] > 1-Qbounds, 1-Qbounds, mu[[i]]))
       mu1[[i]] = predict(dat_nested_p$mu_fit[[i]], newdata = dat1_p[, c(exposure, covarsO)], type = "response")$pred
-      mu1[[i]] = ifelse(mu1[[i]] == 0, alpha, ifelse(mu1[[i]] == 1, 1-alpha, mu1[[i]]))
+      mu1[[i]] = ifelse(mu1[[i]] < Qbounds, Qbounds, ifelse(mu1[[i]] > 1-Qbounds, 1-Qbounds, mu1[[i]]))
       mu0[[i]] = predict(dat_nested_p$mu_fit[[i]], newdata = dat0_p[, c(exposure, covarsO)], type = "response")$pred
-      mu0[[i]] = ifelse(mu0[[i]] == 0, alpha, ifelse(mu0[[i]] == 1, 1-alpha, mu0[[i]]))
+      mu0[[i]] = ifelse(mu0[[i]] < Qbounds, Qbounds, ifelse(mu0[[i]] > 1-Qbounds, 1-Qbounds, mu0[[i]]))
       data_p = suppressMessages(bind_cols(data_p, mu[[i]], mu1[[i]], mu0[[i]]))
     }
   }
   if(family.y == "gaussian"){
     for(i in 1:n_split){
       mu[[i]] = predict(dat_nested_p$mu_fit[[i]], newdata = data_pp[, c(exposure, covarsO)], type = "response")$pred
-      mu[[i]] = ifelse(mu[[i]] <= 0, alpha, ifelse(mu[[i]] >= 1, 1-alpha, mu[[i]]))
+      mu[[i]] = ifelse(mu[[i]] < Qbounds, Qbounds, ifelse(mu[[i]] > 1-Qbounds, 1-Qbounds, mu[[i]]))
       mu1[[i]] = predict(dat_nested_p$mu_fit[[i]], newdata = dat1_p[, c(exposure, covarsO)], type = "response")$pred
-      mu1[[i]] = ifelse(mu1[[i]] <= 0, alpha, ifelse(mu1[[i]] >= 1, 1-alpha, mu1[[i]]))
+      mu1[[i]] = ifelse(mu1[[i]] < Qbounds, Qbounds, ifelse(mu1[[i]] > 1-Qbounds, 1-Qbounds, mu1[[i]]))
       mu0[[i]] = predict(dat_nested_p$mu_fit[[i]], newdata = dat0_p[, c(exposure, covarsO)], type = "response")$pred
-      mu0[[i]] = ifelse(mu0[[i]] <= 0, alpha, ifelse(mu0[[i]] >= 1, 1-alpha, mu0[[i]]))
+      mu0[[i]] = ifelse(mu0[[i]] < Qbounds, Qbounds, ifelse(mu0[[i]] > 1-Qbounds, 1-Qbounds, mu0[[i]]))
       data_p = suppressMessages(bind_cols(data_p, mu[[i]], mu1[[i]], mu0[[i]]))
     }
   }
@@ -244,8 +248,17 @@ tmle_single_g1_p = function(data,
 
   data_p = suppressMessages(bind_cols(data_p, mu0_1_p, mu1_1_p))
 
+
+
   names(data_p) = c(dat_name, paste0("mu0_1_", 1:n_split), paste0("mu1_1_", 1:n_split))
 
+  if(family.y == "gaussian"){
+    for(i in 1:n_split){
+      data_p[ ,paste0("mu1_1_", i)] <- data_p[ ,paste0("mu1_1_", i)]*(max.Y-min.Y) + min.Y
+      data_p[ ,paste0("mu0_1_", i)] <- data_p[ ,paste0("mu0_1_", i)]*(max.Y-min.Y) + min.Y
+    }
+    outcome = original.Y
+  }
 
 
   r1 = r0 = rd = NULL
@@ -305,23 +318,8 @@ tmle_single_g1_p = function(data,
 
   res <- data.frame(rd=rd, var = var1)
 
-#
-#   df = dat_nested_p
-#   x_weight = bind_rows(lapply(df$pi_fit, function(x) x$coef))
-#   y_weight = bind_rows(lapply(df$mu_fit, function(x) x$coef))
-#   weight = bind_rows(x_weight, y_weight)
-#   weight$model = rep(c("x", "y"), each = n_split)
-#   weight$split = rep(1:n_split, times = 2)
-#
-#   x_prev = unlist(bind_rows(lapply(df$data, function(x) colMeans(x[, exposure], na.rm = TRUE))))
-#   y_prev = unlist(bind_rows(lapply(df$data, function(x) colMeans(x[, outcome], na.rm = TRUE))))
-#   prev = c(x_prev, y_prev)
-#   weight$prev = prev
-#
-#   fit = list(results=res, weight=weight)
-#
-
   return(res)
 
 }
+
 
