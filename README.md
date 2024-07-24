@@ -3,117 +3,95 @@
 Author: Momenul Haque Mondol & Mohammad Ehsanul Karim
 ---
 
-## How to install
-
-```{r}
-remotes::install_github("momenulhaque/Crossfit") # it will install the package
-library(Crossfit) 
-```
-Now the package is ready to use. It supports applying both AIPW and TMLE. 
-
- 1. Install the required R packages
-
+## Install the required R packages
+The package primarily requires 'SuperLearner'. Additionally, it requires all the R packages associated with advanced machine learning algorithms.
 ```{r}
 require(SuperLearner)
+# require(randomForest) for SL.randoForest.
 ```
- 
- 2. Defining the data you want to use
- 
-```{r}
-# Read the data set that you want to use. An example data set "statin_sim_data" can be found in this package.
-data = statin_sim_data 
-```
- 3. Defining the model parameters
+## Example data set 
+We generated an example data set ("ObsData") using Kang at al. (2007) and attached it to the package.
 
 ```{r}
-exposure="statin"
-outcome="Y"
-covarsT = c("age", "ldl_log", "risk_score") # covariate for exposure model
-covarsO = c("age", "ldl_log", "risk_score") # covariate for outcome model
-family.y = "binomial"
-learners=c("SL.glm", "SL.glmnet", "SL.xgboost")
-control=list(V = 3, stratifyCV = FALSE, shuffle = TRUE, validRows = NULL)
-num_cf = 5 # number of repetitions
-n_split = 4 # number of splits
-rand_split = FALSE # splits' crossing pattern is not random
-gbound = 0.025
-alpha = 1e-17
-seed = 156
-conf.level = 0.95 # confidence level for confidence interval (default 0.95)
-```
+library(SuperLearner)
+library(tidyverse)
 
- 4. Estimating the average treatment effect (ATE) using generalization 1. 
-
+## Defining Learners
+SL.randomForest.dcTMLE <- function(...){
+  SL.randomForest(...,ntree=500, mtry = 2, nodesize=30)}
+SL.xgboost.dcTMLE <- function(...){
+  SL.xgboost(..., ntrees = 500, max_depth = 4, shrinkage = 0.1, minobspernode = 30)}
+SL.glm.dcTMLE <- function(...){
+  SL.glm(...)}
+SL.gam4.dcTMLE <- function(...){
+  SL.gam(..., deg.gam=4)}
+SL.mean.dcTMLE <- function(...){
+  SL.mean(...)}
+``` 
+### Estimating the average treatment effect (ATE) using generalization 1
 ```{r}
-fit_tmle_g1 <- DC_tmle_g1_k(data,
-                        exposure,
-                        outcome,
-                        covarsT,
-                        covarsO,
-                        family.y,
-                        learners,
-                        control,
-                        num_cf, 
-                        n_split ,
-                        rand_split,
-                        gbound,
-                        alpha,
-                        seed,
-                        conf.level)
+fit_tmle_g1 = DC_tmle_g1_k(data=ObsData,
+                          exposure="X",
+                          outcome="Y",
+                          covarsT=c("C1", "C2", "C3", "C4"),
+                          covarsO=c("C1", "C2", "C3", "C4"),
+                          family.y="gaussian",
+                          learners=c("SL.glm.dcTMLE", "SL.gam4.dcTMLE", "SL.randomForest.dcTMLE", "SL.xgboost.dcTMLE", "SL.mean.dcTMLE"),
+                          control=list(V = 3, stratifyCV = FALSE, shuffle = TRUE, validRows = NULL),
+                          num_cf=5,
+                          n_split=3,
+                          rand_split=FALSE,
+                          Qbounds = 1-0.9995,
+                          gbounds = NULL,
+                          seed=236,
+                          conf.level=0.96,
+                          stat = "median")
 
+> fit_tmle_g1
+# A tibble: 1 × 4
+    ATE    se lower.ci upper.ci
+  <dbl> <dbl>    <dbl>    <dbl>
+1  6.23 0.369     5.47     6.99
 ```
-
- 5. Understanding the results
-
 The object `fit_tmle_g1` contains risk difference (`ATE`), standard error (`se`), lower and upper confidence interval (`lower.ci` and `upper.ci` respectively). 
 
-```{r}
-fit_tmle_g1
-
-# A tibble: 1 × 4
-#      ATE     se lower.ci upper.ci
-#    <dbl>  <dbl>    <dbl>    <dbl>
-#   -0.115 0.0151   -0.157  -0.0726
-
-```
-
-
-
- 6. Estimating the ATE using generalization 2. 
+### Estimating the average treatment effect (ATE) using generalization 2
 
 ```{r}
-fit_tmle_g2 <- DC_tmle_g2_k(data,
-                        exposure,
-                        outcome,
-                        covarsT,
-                        covarsO,
-                        family.y,
-                        learners,
-                        control,
-                        num_cf, 
-                        n_split ,
-                        rand_split,
-                        gbound,
-                        alpha,
-                        seed,
-                        conf.level)
+fit_tmle_g2 <- DC_tmle_g2_k(data=ObsData,
+                          exposure="X",
+                          outcome="Y",
+                          covarsT=c("C1", "C2", "C3", "C4"),
+                          covarsO=c("C1", "C2", "C3", "C4"),
+                          family.y="gaussian",
+                          learners=c("SL.glm.dcTMLE", "SL.gam4.dcTMLE", "SL.randomForest.dcTMLE", "SL.xgboost.dcTMLE", "SL.mean.dcTMLE"),
+                          control=list(V = 3, stratifyCV = FALSE, shuffle = TRUE, validRows = NULL),
+                          num_cf=5,
+                          n_split=3,
+                          rand_split=FALSE,
+                          Qbounds = 1-0.9995,
+                          gbounds = NULL,
+                          seed=236,
+                          conf.level=0.96,
+                          stat = "median")
+
+> fit_tmle_g2
+
 
 ```
-
-5. Understanding the results for generalization 2
-
 The object `fit_tmle_g2` contains risk difference (`ATE`), standard error (`se`), lower and upper confidence interval (`lower.ci` and `upper.ci` respectively). 
 
-```{r}
-fit_tmle_g2
-
-# A tibble: 1 × 4
-#      ATE     se lower.ci upper.ci
-#    <dbl>  <dbl>    <dbl>    <dbl>
-#   -0.114 0.0208   -0.172  -0.0566
-
-```
-
-
 # References
-Zivich PN, and Breskin A. "Machine learning for causal inference: on the use of cross-fit estimators." Epidemiology 32.3 (2021): 393-401
+Kang, J. D. Y., & Schafer, J. L. (2007). Demystifying Double Robustness: A Comparison of Alternative Strategies for Estimating a Population Mean from Incomplete Data. Statistical Science, 22(4). https://doi.org/10.1214/07-STS227
+
+Karim M, Mondol M. "Finding the Optimal Number of Splits and Repetitions in Double Cross-fitting Targeted Maximum Likelihood Estimators." (Under review)
+
+Mondol M, Karim M. "Towards Robust Causal Inference in Epidemiological Research: Employing Double Cross-fit TMLE in Right Heart Catheterization Data." (Under review)
+
+
+# Funding
+Natural Sciences and Engineering Research Council of Canada (NSERC) Discovery Grant (PG#: 20R01603, PI: Karim) as well as UBC Work Learn program (Summer 2023, PI: Karim).
+
+# Acknowledgements
+This research was partially supported by the computational resources and services provided by Advanced Research Computing at the University of British Columbia. We extend our sincere gratitude to Paul N. Zivich and Alexander Breskin for their R codes available at [this GitHub repository](https://github.com/pzivich/publications-code/tree/master/DoubleCrossFit).
+
