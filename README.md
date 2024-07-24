@@ -2,8 +2,15 @@
 ---
 Author: Momenul Haque Mondol & Mohammad Ehsanul Karim
 ---
+## How to install
 
-## Install the required R packages
+```{r}
+remotes::install_github("momenulhaque/Crossfit") # it will install the package
+library(Crossfit) 
+```
+Now the package is ready to use. 
+
+## Install other required R packages
 The package primarily requires 'SuperLearner'. Additionally, it requires all the R packages associated with advanced machine learning algorithms.
 ```{r}
 require(SuperLearner)
@@ -13,8 +20,6 @@ require(SuperLearner)
 We generated an example data set ("ObsData") using Kang at al. (2007) and attached it to the package.
 
 ```{r}
-library(SuperLearner)
-library(tidyverse)
 
 ## Defining Learners
 SL.xgboost.dcTMLE <- function(...){
