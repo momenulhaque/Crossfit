@@ -94,7 +94,7 @@ Kang, J. D. Y., & Schafer, J. L. (2007). Demystifying Double Robustness: A Compa
 
 Karim M, Mondol M. "Finding the Optimal Number of Splits and Repetitions in Double Cross-fitting Targeted Maximum Likelihood Estimators." (Under review)
 
-Mondol M, Karim M. "Towards Robust Causal Inference in Epidemiological Research: Employing Double Cross-fit TMLE in Right Heart Catheterization Data." (Accepted)
+Mondol M, Karim M., (2024). Towards Robust Causal Inference in Epidemiological Research: Employing Double Cross-fit TMLE in Right Heart Catheterization Data. American Journal of Epidemiology. DOI: https://doi.org/10.1093/aje/kwae447 
 
 
 # Funding
